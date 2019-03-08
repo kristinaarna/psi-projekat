@@ -7,7 +7,7 @@
       "ext": "js"
     }, {
       "name": "electron",
-      "exe": "C:/Users/Thomas/AppData/Roaming/npm/node_modules/electron/dist/electron.exe",
+      "exe": "electron",
       "script": "electron.js",
       "options": {
         "skipFirst": true,
@@ -15,7 +15,7 @@
       }
     }, {
       "name": "python",
-      "exe": "C:/Users/Thomas/AppData/Local/Programs/Python/Python37/python.exe",
+      "exe": "python",
       "ext": "py"
     }
   ]

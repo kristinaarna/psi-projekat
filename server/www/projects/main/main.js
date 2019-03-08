@@ -1,19 +1,30 @@
 'use strict';
 
-// Enhance RNG
+/*
+  Older versions of Google Chrome had issues with Math.random()
+  Ref: https://bugs.chromium.org/p/v8/issues/detail?id=8212
+  Function O.enhanceRNG() creates cryptographically secure
+  random number generator that depends on current time in
+  milliseconds and internal 256-bit state.
+*/
 O.enhanceRNG();
+
+// Constants
+const LOADING_SKIP = 0;
+const LOADING_TRESHOLD = LOADING_SKIP ? 1 : 1e-4;
 
 /*
   This should be the first action. Let the CSS
   load in the background while we display
-  the loading screen
+  the loading screen.
 */
 let hasCss = 0;
+let hasModules = 0;
 injectCss();
 
 /*
   The number of all XHR requests that are intended
-  to be performed directly or indirectly
+  to be performed directly or indirectly.
 */
 const modulesNum = 8;
 O.module.remaining = modulesNum;
@@ -24,9 +35,20 @@ const loadingDiv = O.ce(mainDiv, 'div', 'loading');
 injectLoading();
 
 // Load modules
-const Display = require('./display');
+const DOM = require('./dom');
 
-function main(){
+hasModules = 1;
+
+// This is the main function
+async function main(){
+  // Ensure that CSS and all modules are loaded
+  await O.while(() => !(hasCss && hasModules));
+
+  // Remove loading screen
+  loadingDiv.remove();
+
+  // Create DOM instance
+  const dom = new DOM(mainDiv);
 }
 
 function injectCss(){
@@ -73,21 +95,23 @@ function injectLoading(){
     k = k * f + kk * f1;
     const percent = k * 100 + .5 | 0;
 
-    g.font = '100px arial';
-    g.fillText(`${percent}%`, 0, 0);
+    if(!LOADING_SKIP){
+      g.font = '100px arial';
+      g.fillText(`${percent}%`, 0, 0);
 
-    g.strokeStyle = '#ccc';
-    g.beginPath();
-    g.arc(0, 0, 200, 0, O.pi2);
-    g.stroke();
+      g.strokeStyle = '#ccc';
+      g.beginPath();
+      g.arc(0, 0, 200, 0, O.pi2);
+      g.stroke();
 
-    g.strokeStyle = '#444';
-    g.beginPath();
-    g.arc(0, 0, 200, -O.pih, k * O.pi2 - O.pih);
-    g.stroke();
+      g.strokeStyle = '#444';
+      g.beginPath();
+      g.arc(0, 0, 200, -O.pih, k * O.pi2 - O.pih);
+      g.stroke();
+    }
 
-    if(k === 1)
-      return main();
+    if(O.module.remaining === 0 && 1 - k < LOADING_TRESHOLD)
+      return main().catch(error);
 
     O.raf(render);
   }

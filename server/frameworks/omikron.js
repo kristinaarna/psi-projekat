@@ -221,6 +221,35 @@ class Color extends Uint8ClampedArray{
   }
 };
 
+class EventEmitter{
+  constructor(){
+    this.ls = O.obj();
+  }
+
+  removeListener(type, func){
+    const {ls} = this;
+    if(!(type in ls)) return;
+    ls[type].remove(func);
+  }
+
+  removeAllListeners(type){
+    delete this.ls[type];
+  }
+
+  on(type, func){
+    const {ls} = this;
+    if(!(type in ls)) ls[type] = new Set();
+    ls[type].add(func);
+    return this;
+  }
+
+  emit(type, ...args){
+    const {ls} = this;
+    if(!(type in ls)) return;
+    ls[type].forEach(func => func(...args));
+  }
+};
+
 class Grid{
   constructor(w, h, func=null, d=null){
     this.w = w;
@@ -2054,6 +2083,7 @@ const O = {
 
   Vector,
   Color,
+  EventEmitter,
   Grid,
   GridUI,
   Map2D,
@@ -2096,7 +2126,7 @@ const O = {
     O.module.cache = O.obj();
 
     if(loadProject){
-      O.project = O.urlParam('project');
+      O.project = O.urlParam('project', 'main');
 
       if(!O.projectTest(O.project))
         return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
@@ -2217,6 +2247,10 @@ const O = {
     O.ceText(O.body, msg);
     O.ceBr(O.body, 2);
     O.ceLink(O.body, 'Home Page', '/');
+
+    O.raf(() => {
+      throw msg;
+    });
   },
 
   /*
@@ -2438,39 +2472,48 @@ const O = {
     const cache = O.module.cache;
     const pathOrig = path;
 
-    let script;
+    let data;
+    let isScript = 1;
 
     if(path in cache) return cache[path];
     
     if(path.endsWith('.js')){
-      script = await O.rfAsync(path);
-    }else if((script = await O.rfAsync(`${path}.js`)) !== null){
+      data = await O.rfAsync(path);
+    }else if((data = await O.rfAsync(`${path}.js`)) !== null){
       path += '.js';
       if(path in cache) return cache[path];
+    }else if((data = await O.rfAsync(`${path}.json`)) !== null){
+      path += '.json';
+      if(path in cache) return cache[path];
+      isScript = 0;
     }else{
       path += '/index.js';
       if(path in cache) return cache[path];
-      script = await O.rfAsync(path);
+      data = await O.rfAsync(path);
     }
 
-    if(script === null){
-      O.error(`Failed to load script for project ${JSON.stringify(O.project)}`);
+    if(data === null){
+      O.error(`Failed to load data for project ${JSON.stringify(O.project)}`);
       return null;
     }
 
     path = path.split('/');
     path.pop();
 
-    script = script.replace(/^const (?:O|debug) .+/gm, '');
-    script = script.replace(/ \= require\(/g, ' \= await require(');
+    const module = {exports: {}};
 
-    var AsyncFunction = (async () => {}).constructor;
+    if(isScript){
+      data = data
+        .replace(/^const (?:O|debug) .+/gm, '')
+        .replace(/ \= require\(/g, ' \= await require(');
 
-    var module = {exports: {}};
-    var {exports} = module;
+      const AsyncFunction = (async () => {}).constructor;
+      const func = new AsyncFunction('window', 'document', 'Function', 'O', 'require', 'module', 'exports', data);
 
-    var func = new AsyncFunction('window', 'document', 'Function', 'O', 'require', 'module', 'exports', script);
-    await func(window, document, Function, O, require, module, exports);
+      await func(window, document, Function, O, require, module, module.exports);
+    }else{
+      module.exports = JSON.parse(data)
+    }
 
     return cache[pathOrig] = module.exports;
 

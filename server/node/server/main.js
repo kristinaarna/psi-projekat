@@ -8,6 +8,9 @@ const statusMsgs = require('./status-msgs');
 
 O.enhanceRNG();
 
+const SIMULATE_SLOW_CONNECTION = 0;
+const DELAY_RESPONSE = 1e3;
+
 const PORT = 8081;
 const INDEX_FILE = 'index.htm';
 
@@ -27,7 +30,10 @@ function main(){
 
 function onReq(req, res){
   const send = file => {
-    fs.createReadStream(file).pipe(res);
+    const sendFile = () => fs.createReadStream(file).pipe(res);
+
+    if(!SIMULATE_SLOW_CONNECTION) return sendFile(file);
+    setTimeout(sendFile, DELAY_RESPONSE);
   };
 
   const err = (status, info=null) => {
