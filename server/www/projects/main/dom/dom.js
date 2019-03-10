@@ -33,6 +33,19 @@ class DOM extends Element{
     this.createNavbar();
     this.createPageContent();
 
+    this.aels();
+    this.reload();
+  }
+
+  aels(){
+    O.ael('popstate', evt => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      this.reload();
+    });
+  }
+
+  reload(){
     this.loadPage().then(() => {
       O.raf(() => this.emit('load'));
     }).catch(err => {
@@ -41,11 +54,22 @@ class DOM extends Element{
   }
 
   createNavbar(){
-    this.navbar = new Navbar(this.main);
+    const navbar = new Navbar(this.main);
+    this.navbar = navbar;
+
+    navbar.on('click', (name, elem, evt) => {
+      this.navigate(elem.path);
+    });
   }
 
   createPageContent(){
     this.pageContent = new PageContent(this.main);
+  }
+
+  navigate(path){
+    const url = path !== '' ? `/?path=${path}` : '/';
+    history.pushState(null, path, url);
+    this.reload();
   }
 
   async loadPage(){

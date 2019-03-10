@@ -148,12 +148,13 @@ body{
 }
 
 .post{
-  width: calc(100% - (20px + 8px) * 2);
+  width: calc(100% - (20px + 8px + 1px) * 2);
   margin: 20px;
   padding: 8px;
   display: block;
   color: black;
   text-align: left;
+  background-color: var(--semi-transparent);
 }
 
 .post-user{

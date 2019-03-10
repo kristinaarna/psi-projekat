@@ -4,26 +4,19 @@ const LS = require('../../strings');
 const Element = require('../element');
 
 class NavbarItem extends Element.Button{
-  constructor(parent, text){
+  constructor(parent, text, path){
     super(parent, text);
+    this.path = path;
   }
 
   css(){ return 'navbar-item'; }
 };
 
 class NavbarItemLeft extends NavbarItem{
-  constructor(parent, text){
-    super(parent, text);
-  }
-
   css(){ return 'left'; }
 };
 
 class NavbarItemRight extends NavbarItem{
-  constructor(parent, text){
-    super(parent, text);
-  }
-
   css(){ return 'right'; }
 };
 

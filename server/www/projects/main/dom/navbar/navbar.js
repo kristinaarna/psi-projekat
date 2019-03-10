@@ -10,15 +10,15 @@ class Navbar extends Element.Div{
 
     const items = {
       left: [
-        'home',
-        'sandbox',
-        'competition',
-        'search',
-        'contact',
+        ['home', ''],
+        ['sandbox', 'sandbox'],
+        ['competition', 'competition'],
+        ['search', 'search'],
+        ['contact', 'contact'],
       ],
       right: [
-        'register',
-        'login',
+        ['register', 'register'],
+        ['login', 'login'],
       ],
     };
 
@@ -27,12 +27,12 @@ class Navbar extends Element.Div{
       const ctor = type === 'left' ? NavbarItem.NavbarItemLeft : NavbarItem.NavbarItemRight;
 
       for(let i = 0; i !== arr.length; i++){
-        const name = arr[i];
+        const [name, path] = arr[i];
         const label = LS.labels.navbar[type][name];
-        const elem = new ctor(this, label);
+        const elem = new ctor(this, label, path);
 
         elem.on('click', evt => {
-          this.onItemClick(name, evt);
+          this.onItemClick(name, elem, evt);
         });
 
         arr[i] = elem;
@@ -43,8 +43,8 @@ class Navbar extends Element.Div{
   }
 
   // Triggers when user clicks on any navbar item
-  onItemClick(name, evt){
-    log(name);
+  onItemClick(name, elem, evt){
+    this.emit('click', name, elem, evt);
   }
 
   css(){ return 'navbar'; }
