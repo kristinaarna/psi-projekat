@@ -36,7 +36,7 @@ async function main(){
     );
   }
 
-  updatePath('server/node/server');
+  updatePath('server/node/servers');
 
   askForInput();
 }

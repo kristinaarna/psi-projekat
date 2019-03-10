@@ -229,24 +229,40 @@ class EventEmitter{
   removeListener(type, func){
     const {ls} = this;
     if(!(type in ls)) return;
-    ls[type].remove(func);
+    ls[type].delete(func);
+    if(ls[type].size === 0) delete ls[type];
+    return this;
   }
 
   removeAllListeners(type){
     delete this.ls[type];
+    return this;
   }
 
   on(type, func){
     const {ls} = this;
-    if(!(type in ls)) ls[type] = new Set();
-    ls[type].add(func);
+    if(!(type in ls)) ls[type] = new Map();
+    ls[type].set(func, 1);
+    return this;
+  }
+
+  once(type, func){
+    const {ls} = this;
+    if(!(type in ls)) ls[type] = new Map();
+    ls[type].set(func, 0);
     return this;
   }
 
   emit(type, ...args){
     const {ls} = this;
-    if(!(type in ls)) return;
-    ls[type].forEach(func => func(...args));
+    if(!(type in ls)) return this;
+
+    for(const [func, repeat] of ls[type]){
+      func(...args);
+      if(!repeat) this.removeListener(type, func);
+    }
+
+    return this;
   }
 };
 
@@ -2239,18 +2255,17 @@ const O = {
     O.ceText(h1, title);
   },
 
-  error(msg){
+  error(err){
+    log(new Error().stack);
+
     O.body.classList.remove('has-canvas');
-    O.body.style.backgroundColor = '#ffffff';
+    O.body.style.margin = '8px';
+    O.body.style.background = '#ffffff';
 
     O.title('Error Occured');
-    O.ceText(O.body, msg);
+    O.ceText(O.body, err);
     O.ceBr(O.body, 2);
     O.ceLink(O.body, 'Home Page', '/');
-
-    O.raf(() => {
-      throw msg;
-    });
   },
 
   /*
@@ -2266,6 +2281,12 @@ const O = {
 
       return word;
     }).join(' ');
+  },
+
+  nameToProject(name){
+    return name
+      .replace(/\s./g, m => m[1].toUpperCase())
+      .replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
   },
 
   shouldUpper(word){ return O.uppercaseWords.includes(word); },
@@ -2447,6 +2468,7 @@ const O = {
       file = `${window.VIRTUAL_URL_BASE}${file.substring(1)}`;
 
     xhr.open('GET', O.urlTime(file));
+    xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
     xhr.send(null);
   },
 

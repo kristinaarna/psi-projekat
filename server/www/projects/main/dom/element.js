@@ -22,13 +22,32 @@ class Element extends O.EventEmitter{
     this.parent = parent;
     this.parentElem = parentElem;
 
-    this.elem = null;
-
-    this.init();
+    if(this.parentElem !== null)
+      this.elem = O.ce(this.parentElem, this.getTag(), this.getCss());
+    else
+      this.elem = null;
   }
 
-  init(){
-    this.elem = O.ce(this.parentElem, this.getTag(), this.getCss());
+  // Add event listener wrapper
+  ael(type, func){
+    O.ael(this.elem, type, evt => {
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      func(evt);
+    });
+  }
+
+  clear(){
+    for(const child of this.children)
+      child.remove();
+  }
+
+  reset(){ return this.clear(); }
+  purge(){ return this.clear(); }
+
+  get children(){
+    return this.elem.children;
   }
 
   getText(){
@@ -94,15 +113,33 @@ class Link extends Text{
 
 class Heading extends Text{
   constructor(parent, text, size=1){
+    Heading[O.static] = size;
     super(parent, text);
     this.headingSize = size;
-    this.init(1);
   }
 
-  init(init=0){ if(init) super.init(1); }
+  tag(){
+    const size = O.has(this, 'headingSize') ? this.headingSize : Heading[O.static];
+    return `h${size}`;
+  }
 
-  tag(){ return `h${this.headingSize}`; }
   css(){ return 'heading'; }
+};
+
+class Title extends Heading{
+  constructor(parent, text){
+    super(parent, text);
+  }
+
+  css(){ return 'title'; }
+};
+
+class Rectangle extends Div{
+  constructor(parent){
+    super(parent);
+  }
+
+  css(){ return 'rect'; }
 };
 
 class Button extends Span{
@@ -112,7 +149,7 @@ class Button extends Span{
   }
 
   aels(){
-    O.ael(this.elem, 'click', evt => {
+    this.ael('click', evt => {
       this.emit('click', evt);
     });
   }
@@ -125,6 +162,8 @@ Element.Text = Text;
 Element.Span = Span;
 Element.Link = Link;
 Element.Heading = Heading;
+Element.Title = Title;
+Element.Rectangle = Rectangle;
 Element.Button = Button;
 
 module.exports = Element;

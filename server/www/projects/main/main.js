@@ -10,8 +10,8 @@
 O.enhanceRNG();
 
 // Constants
-const LOADING_SKIP = 0;
-const LOADING_TRESHOLD = LOADING_SKIP ? 1 : 1e-4;
+const LOADING_DISPLAY = 1;
+const LOADING_TRESHOLD = LOADING_DISPLAY ? 1e-4 : 1;
 
 /*
   This should be the first action. Let the CSS
@@ -26,16 +26,19 @@ injectCss();
   The number of all XHR requests that are intended
   to be performed directly or indirectly.
 */
-const modulesNum = 8;
-O.module.remaining = modulesNum;
+const MODULES_NUM = 23;
+O.module.remaining = MODULES_NUM;
 
 // Main and loading divs
 const mainDiv = O.ce(O.body, 'div', 'main');
-const loadingDiv = O.ce(mainDiv, 'div', 'loading');
+const loadingDiv = O.ce(O.body, 'div', 'loading');
 injectLoading();
 
 // Load modules
 const DOM = require('./dom');
+const backend = require('./backend');
+
+let dom = null;
 
 hasModules = 1;
 
@@ -44,11 +47,21 @@ async function main(){
   // Ensure that CSS and all modules are loaded
   await O.while(() => !(hasCss && hasModules));
 
-  // Remove loading screen
-  loadingDiv.remove();
-
   // Create DOM instance
-  const dom = new DOM(mainDiv);
+  dom = new DOM(mainDiv);
+
+  dom.once('load', () => {
+    loadingDiv.classList.add('fade-in-out');
+    mainDiv.classList.add('fade-in-out');
+
+    // Remove loading screen
+    loadingDiv.style.opacity = '0';
+    loadingDiv.style.pointerEvents = 'none';
+    mainDiv.style.opacity = '1';
+    mainDiv.style.pointerEvents = 'all';
+  }).once('error', err => {
+    error(err);
+  });
 }
 
 function injectCss(){
@@ -90,12 +103,12 @@ function injectLoading(){
     const f = .9;
     const f1 = 1 - f;
 
-    const kk = 1 - O.module.remaining / modulesNum;
+    const kk = 1 - O.module.remaining / MODULES_NUM;
     
     k = k * f + kk * f1;
     const percent = k * 100 + .5 | 0;
 
-    if(!LOADING_SKIP){
+    if(LOADING_DISPLAY){
       g.font = '100px arial';
       g.fillText(`${percent}%`, 0, 0);
 
