@@ -6,7 +6,7 @@ const PostUser = require('./user');
 const PostDate = require('./date');
 const PostContent = require('./content');
 
-class Post extends Element.Rectangle{
+class Post extends Element.Region{
   constructor(parent, user, date, content){
     super(parent);
 

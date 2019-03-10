@@ -30,8 +30,9 @@ const MODULES_NUM = 23;
 O.module.remaining = MODULES_NUM;
 
 // Main and loading divs
-const mainDiv = O.ce(O.body, 'div', 'main');
-const loadingDiv = O.ce(O.body, 'div', 'loading');
+const loadingDiv = O.ce(O.body, 'div', 'top loading');
+const mainDiv = O.ce(O.body, 'div', 'top main');
+const modalDiv = O.ce(O.body, 'div', 'top modal');
 injectLoading();
 
 // Load modules
@@ -48,11 +49,12 @@ async function main(){
   await O.while(() => !(hasCss && hasModules));
 
   // Create DOM instance
-  dom = new DOM(mainDiv);
+  dom = new DOM(mainDiv, modalDiv);
 
   dom.once('load', () => {
     loadingDiv.classList.add('fade-in-out');
     mainDiv.classList.add('fade-in-out');
+    modalDiv.classList.add('fade-in-out');
 
     // Remove loading screen
     loadingDiv.style.opacity = '0';

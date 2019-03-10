@@ -15,11 +15,12 @@ const pages = require('./pages');
 */
 
 class DOM extends Element{
-  constructor(main, init=1){
+  constructor(main, modal, init=1){
     super();
 
     // Main element
     this.main = main;
+    this.modal = modal;
 
     // Elements
     this.navbar = null;

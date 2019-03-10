@@ -127,19 +127,15 @@ class Heading extends Text{
 };
 
 class Title extends Heading{
-  constructor(parent, text){
-    super(parent, text);
-  }
-
   css(){ return 'title'; }
 };
 
 class Rectangle extends Div{
-  constructor(parent){
-    super(parent);
-  }
-
   css(){ return 'rect'; }
+};
+
+class Region extends Rectangle{
+  css(){ return 'region'; }
 };
 
 class Button extends Span{
@@ -164,6 +160,7 @@ Element.Link = Link;
 Element.Heading = Heading;
 Element.Title = Title;
 Element.Rectangle = Rectangle;
+Element.Region = Region;
 Element.Button = Button;
 
 module.exports = Element;
