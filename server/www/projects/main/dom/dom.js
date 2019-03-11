@@ -27,6 +27,8 @@ class DOM extends Element{
     this.pageContent = null;
     this.page = null;
 
+    this.loading = 0;
+
     if(init) this.init();
   }
 
@@ -49,8 +51,10 @@ class DOM extends Element{
   reload(){
     this.loadPage().then(() => {
       O.raf(() => this.emit('load'));
+      this.loading = 0;
     }).catch(err => {
       O.raf(() => this.emit('error', err));
+      this.loading = 0;
     });
   }
 
@@ -74,6 +78,9 @@ class DOM extends Element{
   }
 
   async loadPage(){
+    await O.while(() => this.loading);
+    this.loading = 1;
+
     const e404 = async () => {
       await this.createError(404);
     };
@@ -91,7 +98,24 @@ class DOM extends Element{
 
     if(len === 1){
       switch(path[0]){
-        case 'error': this.createError(O.urlParam('status'), O.urlParam('info')); break;
+        case 'language':
+          await this.createLanguagePage();
+          break;
+
+        case 'register':
+          await this.createRegisterPage();
+          break;
+
+        case 'login':
+          await this.createLoginPage();
+          break;
+
+        case 'error':
+          const status = O.urlParam('status');
+          const info = O.urlParam('info');
+          await this.createError(status, info);
+          break;
+
         default: await e404(); break;
       }
       return;
@@ -115,8 +139,24 @@ class DOM extends Element{
     }
   }
 
+  async createLanguagePage(){
+    const page = new pages.Language(this.pageContent);
+    this.page = page;
+  }
+
+  async createRegisterPage(){
+    const page = new pages.Register(this.pageContent);
+    this.page = page;
+  }
+
+  async createLoginPage(){
+    const page = new pages.Login(this.pageContent);
+    this.page = page;
+  }
+
   async createError(status, msg=null){
-    this.page = new pages.Error(this.pageContent, status, msg);
+    const page = new pages.Error(this.pageContent, status, msg);
+    this.page = page;
   }
 };
 

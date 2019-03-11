@@ -14,9 +14,13 @@ class Navbar extends Element.Div{
         ['sandbox', 'sandbox'],
         ['competition', 'competition'],
         ['search', 'search'],
-        ['contact', 'contact'],
+        ['help', 'help'],
+        ['language', 'language'],
       ],
-      right: [
+      right: O.lst.signedIn ? [
+        ['signOut', 'signOut'],
+        ['profile', 'profile'],
+      ] : [
         ['register', 'register'],
         ['login', 'login'],
       ],

@@ -35,7 +35,7 @@ class HTTPServer extends Server{
   onReq(req, res){
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'x-requested-with');
-    
+
     const send = file => {
       const sendFile = () => fs.createReadStream(file).pipe(res);
 

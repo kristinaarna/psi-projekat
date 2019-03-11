@@ -26,7 +26,7 @@ injectCss();
   The number of all XHR requests that are intended
   to be performed directly or indirectly.
 */
-const MODULES_NUM = 23;
+const MODULES_NUM = 33;
 O.module.remaining = MODULES_NUM;
 
 // Main and loading divs
@@ -37,6 +37,7 @@ injectLoading();
 
 // Load modules
 const DOM = require('./dom');
+const storage = require('./storage');
 const backend = require('./backend');
 
 let dom = null;
@@ -47,6 +48,9 @@ hasModules = 1;
 async function main(){
   // Ensure that CSS and all modules are loaded
   await O.while(() => !(hasCss && hasModules));
+
+  O.lst = new storage.LocalStorage();
+  O.sst = new storage.SessionStorage();
 
   // Create DOM instance
   dom = new DOM(mainDiv, modalDiv);
@@ -126,7 +130,7 @@ function injectLoading(){
     }
 
     if(O.module.remaining === 0 && 1 - k < LOADING_TRESHOLD)
-      return main().catch(error);
+      return main()//.catch(error);
 
     O.raf(render);
   }

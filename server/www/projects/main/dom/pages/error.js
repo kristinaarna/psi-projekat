@@ -2,14 +2,18 @@
 
 const LS = require('../../strings');
 const Element = require('../element');
+const Page = require('./page');
 
 const es = LS.errors;
 
-class Error extends Element.Div{
+class Error extends Page{
   constructor(parent, status, msg=null){
+    status |= 0;
+    Error[O.static] = status;
+
     super(parent);
 
-    status |= 0;
+    this.status = status;
 
     if(!(status in es.server.status))
       return O.error('Unsupported status code');
@@ -17,8 +21,12 @@ class Error extends Element.Div{
     if(msg === null) msg = es.server.status[status];
     else msg = es.server.info[msg];
 
-    this.title = new Element.Title(this, `${es.error} ${status}`);
     this.desc = new Element.Span(this, msg);
+  }
+
+  static title(){
+    const status = O.has(this, 'status') ? this.status : Error[O.static];
+    return `${LS.errors.error} ${status}`;
   }
 };
 

@@ -46,8 +46,10 @@ class Element extends O.EventEmitter{
   reset(){ return this.clear(); }
   purge(){ return this.clear(); }
 
+  br(num){ return O.ceBr(this.elem, num); }
+
   get children(){
-    return this.elem.children;
+    return Array.from(this.elem.children);
   }
 
   getText(){
@@ -95,11 +97,60 @@ class Text extends Element{
 };
 
 class Span extends Text{
-  constructor(parent, text){
-    super(parent, text);
+  tag(){ return 'span'; }
+};
+
+class Input extends Element{
+  constructor(parent, placeholder=null){
+    super(parent);
+
+    if(placeholder !== null)
+      this.elem.placeholder = placeholder;
   }
 
-  tag(){ return 'span'; }
+  tag(){ return 'input'; }
+  css(){ return 'input'; }
+};
+
+class InputText extends Input{
+  constructor(parent, placeholder){
+    super(parent, placeholder);
+    this.elem.type = 'text';
+  }
+
+  getText(){
+    return this.elem.value;
+  }
+
+  setText(val){
+    this.elem.value = val;
+  }
+};
+
+class InputPass extends Input{
+  constructor(parent, placeholder){
+    super(parent, placeholder);
+    this.elem.type = 'password';
+  }
+};
+
+class InputDropdown extends Input{
+  constructor(parent, opts=[], selected=null){
+    super(parent);
+
+    for(const [label, desc] of opts)
+      this.addOpt(label, desc, label === selected);
+  }
+
+  addOpt(label, desc, selected=0){
+    const opt = O.ce(this.elem, 'option');
+    opt.value = label;
+    O.ceText(opt, desc);
+    if(selected) opt.selected = '1';
+  }
+
+  tag(){ return 'select'; }
+  css(){ return 'dropdown'; }
 };
 
 class Link extends Text{
@@ -156,6 +207,10 @@ class Button extends Span{
 Element.Div = Div;
 Element.Text = Text;
 Element.Span = Span;
+Element.Input = Input;
+Element.InputText = InputText;
+Element.InputPass = InputPass;
+Element.InputDropdown = InputDropdown;
 Element.Link = Link;
 Element.Heading = Heading;
 Element.Title = Title;

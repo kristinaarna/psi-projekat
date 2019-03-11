@@ -1,7 +1,7 @@
 'use strict';
 
-const LS = require('../../../../strings');
-const Element = require('../../../element');
+const LS = require('../../strings');
+const Element = require('../element');
 
 class PostContent extends Element.Span{
   constructor(parent, str){

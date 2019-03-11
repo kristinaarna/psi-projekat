@@ -1658,7 +1658,7 @@ class Buffer extends Uint8Array{
     return new O.Buffer(size);
   }
 
-  static from(data, encoding){
+  static from(data, encoding='utf8'){
     if(data.length === 0)
       return O.Buffer.alloc(0);
 
@@ -1668,8 +1668,16 @@ class Buffer extends Uint8Array{
         return new O.Buffer(data);
         break;
 
-      default:
+      case 'base64':
+        return O.base64.decode(data);
+        break;
+
+      case 'utf8':
         return new O.Buffer(data);
+        break;
+
+      default:
+        this.errEnc(encoding);
         break;
     }
   }
@@ -1718,130 +1726,27 @@ class Buffer extends Uint8Array{
   }
 
   toString(encoding){
-    var arr = [...this];
-
     switch(encoding){
       case 'hex':
-        return arr.map(a => a.toString(16).padStart(2, '0')).join('');
+        return Array.from(this).map(a => a.toString(16).padStart(2, '0')).join('');
+        break;
+
+      case 'base64':
+        return O.base64.encode(this);
+        break;
+
+      case 'utf8':
+        return Array.from(this).map(a => String.fromCharCode(a)).join('');
         break;
 
       default:
-        return arr.map(a => String.fromCharCode(a)).join('');
+        this.errEnc(encoding);
         break;
     }
   }
-};
 
-class Storage{
-  constructor(obj=null, path=null, prefix=null){
-    if(obj === null) obj = O.obj();
-
-    this.obj = obj;
-    this.prefix = prefix;
-
-    if(path !== null){
-      var obj1 = this.get(path);
-
-      if(!this.isObj(obj1)){
-        obj1 = O.obj();
-        this.set(path, obj1);
-      }
-
-      this.obj = obj1;
-    }
-  }
-
-  reset(){
-    const {obj} = this;
-
-    for(var key of O.keys(obj))
-      if(this.isOwnKey(key))
-        delete obj[key];
-  }
-
-  has(path){
-    var {obj} = this;
-
-    return this.iterPath(path, key => {
-      if(!(key in obj)) return;
-      obj = obj[key];
-      return 1;
-    });
-  }
-
-  get(path, defaultVal=null){
-    var {obj} = this;
-
-    var found = this.iterPath(path, key => {
-      if(!(key in obj)) return;
-      obj = obj[key];
-      return 1;
-    });
-
-    if(!found) return defaultVal;
-    return obj;
-  }
-
-  set(path, val){
-    var {obj} = this;
-    var last;
-
-    this.iterPath(path, (key, index, arr) => {
-      if(index === arr.length - 1){
-        last = key;
-        return 1;
-      }
-
-      if(!this.isObj(obj[key])) obj[key] = O.obj();
-      obj = obj[key];
-      return 1;
-    });
-
-    obj[last] = val;
-  }
-
-  remove(path){
-    var {obj} = this;
-    var last;
-
-    var found = this.iterPath(path, (key, index, arr) => {
-      if(index === arr.length - 1){
-        last = key;
-        return 1;
-      }
-
-      if(!(key in obj)) return;
-      obj = obj[key];
-      return 1;
-    });
-
-    if(!found) return;
-    delete obj[last];
-  }
-
-  iterPath(path, func){
-    return path.split('.').every((key, index, arr) => {
-      if(index === 0) key = this.format(key);
-      return func(key, index, arr);
-    });
-  }
-
-  format(key){
-    const {prefix} = this;
-
-    if(prefix === null) return key;
-    return `${prefix}_${key}`;
-  }
-
-  isOwnKey(key){
-    const {prefix} = this;
-
-    if(prefix === null) return 1;
-    return key.startsWith(`${prefix}_`);
-  }
-
-  isObj(val){
-    return typeof val === 'object' && val !== null;
+  errEnc(encoding){
+    throw new TypeError(`Unsupported encoding ${O.sf(encoding)}`);
   }
 };
 
@@ -2065,6 +1970,78 @@ class Serializer extends IO{
   }
 };
 
+class Serializable{
+  ser(ser=new O.Serializer()){ O.virtual('ser'); }
+  deser(ser){ O.virtual('deser'); }
+};
+
+class Storage extends Serializable{
+  constructor(storage=window.localStorage, prop=O.project){
+    super();
+
+    this.storage = storage;
+    this.prop = prop;
+
+    if(this.check()){
+      this.load();
+    }else{
+      this.init();
+      this.save();
+    }
+  }
+
+  static get version(){ O.virtual('version'); }
+  static get checksum(){ return 1; }
+  static get encoding(){ return 'base64'; }
+
+  get version(){ return this.constructor.version; }
+  get encoding(){ return this.constructor.encoding; }
+  get checksum(){ return this.constructor.checksum; }
+
+  init(){ O.virtual('init'); }
+
+  getSer(){
+    const {storage, prop} = this;
+
+    const str = storage[prop];
+    const buf = O.Buffer.from(str, this.encoding);
+    const ser = new O.Serializer(buf, this.checksum);
+
+    return ser;
+  }
+
+  check(){
+    const {storage, prop} = this;
+    if(!O.has(storage, prop)) return 0;
+
+    const ser = this.getSer();
+    const ver = ser.readInt();
+
+    return ver === this.version;
+  }
+
+  load(){
+    const ser = this.getSer();
+    const ver = ser.readInt();
+
+    this.deser(ser);
+  }
+
+  save(){
+    const {storage, prop} = this;
+
+    const ser = new O.Serializer();
+    ser.writeInt(this.version);
+
+    this.ser(ser);
+
+    const buf = ser.getOutput(this.checksum);
+    const str = buf.toString(this.encoding);
+
+    storage[prop] = str;
+  }
+};
+
 const O = {
   global: null,
   isNode: null,
@@ -2088,12 +2065,18 @@ const O = {
   rseed: null,
 
   // Node modules
+
   nm: null,
 
   module: {
     cache: null,
     remaining: 0,
   },
+
+  // Storage
+
+  lst: null,
+  sst: null,
 
   // Classes
 
@@ -2108,9 +2091,10 @@ const O = {
   CoordsColle,
   EnhancedRenderingContext,
   Buffer,
-  Storage,
   IO,
   Serializer,
+  Serializable,
+  Storage,
 
   init(loadProject=1){
     const CHROME_ONLY = 0;
@@ -2129,6 +2113,9 @@ const O = {
     if(isBrowser){
       if(CHROME_ONLY && global.navigator.vendor !== 'Google Inc.')
         return O.error('Please use Chrome.');
+
+      O.lst = window.localStorage;
+      O.sst = window.sessionStorage;
     }
 
     if(isNode){
@@ -2142,7 +2129,7 @@ const O = {
     O.module.cache = O.obj();
 
     if(loadProject){
-      O.project = O.urlParam('project', 'main');
+      O.project = 'main';
 
       if(!O.projectTest(O.project))
         return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
@@ -2498,7 +2485,7 @@ const O = {
     let isScript = 1;
 
     if(path in cache) return cache[path];
-    
+
     if(path.endsWith('.js')){
       data = await O.rfAsync(path);
     }else if((data = await O.rfAsync(`${path}.js`)) !== null){
@@ -2922,6 +2909,7 @@ const O = {
   sf(val){ return JSON.stringify(val, null, 2); },
   rev(str){ return str.split('').reverse().join(''); },
   has(obj, key){ return Object.hasOwnProperty.call(obj, key); },
+  desc(obj, key){ return Object.getOwnPropertyDescriptor.call(obj, key); },
 
   /*
     Node functions
@@ -3162,6 +3150,103 @@ const O = {
 
       return true;
     }
+  })(),
+
+  base64: (() => {
+    const encode = data => {
+      const buf = Buffer.from(data);
+
+      let str = '';
+      let val = 0;
+
+      buf.forEach((byte, i) => {
+        switch(i % 3){
+          case 0:
+            str += char(byte >> 2);
+            val = (byte & 3) << 4;
+            break;
+
+          case 1:
+            str += char((byte >> 4) | val);
+            val = (byte & 15) << 2;
+            break;
+
+          case 2:
+            str += char((byte >> 6) | val);
+            str += char(byte & 63);
+            break;
+        }
+      });
+
+      const m = buf.length % 3;
+      if(m !== 0) str += char(val) + '='.repeat(3 - m);
+
+      return str;
+    };
+
+    const decode = str => {
+      const pad = str.match(/\=*$/)[0].length;
+      const extraBytes = pad !== 0 ? pad : 0;
+      const len = (str.length >> 2) * 3 - extraBytes;
+      const buf = Buffer.alloc(len);
+
+      str += str;
+
+      let j = 0;
+      let val = 0;
+
+      for(let i = 0; i !== len; i++){
+        let byte = 0;
+
+        switch(i % 3){
+          case 0:
+            byte = ord(str[j++]) << 2;
+            val = ord(str[j++]);
+            byte |= val >> 4;
+            break;
+
+          case 1:
+            byte = val << 4;
+            val = ord(str[j++]);
+            byte |= val >> 2;
+            break;
+
+          case 2:
+            byte = (val << 6) | ord(str[j++]);
+            break;
+        }
+
+        buf[i] = byte;
+      }
+
+      return buf;
+    };
+
+    const char = ord => {
+      if(ord === 62) return '+';
+      if(ord === 63) return '/';
+
+      return O.sfcc(ord + (
+        ord < 26 ? 65 :
+        ord < 52 ? 71 :
+        -4
+      ));
+    };
+
+    const ord = char => {
+      if(char === '+') return 62;
+      if(char === '/') return 63;
+
+      const cc = O.cc(char);
+
+      return cc + (
+        cc < 65 ? 4 :
+        cc < 97 ? -65 :
+        -71
+      );
+    };
+
+    return {encode, decode};
   })(),
 
   /*

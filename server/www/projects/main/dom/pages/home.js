@@ -1,18 +1,19 @@
 'use strict';
 
-const LS = require('../../../strings');
-const Element = require('../../element');
-const Post = require('./post');
+const LS = require('../../strings');
+const Element = require('../element');
+const Page = require('./page');
+const Post = require('../post');
 
-class Home extends Element.Div{
+class Home extends Page{
   constructor(parent, posts=[]){
     super(parent);
 
-    this.title = new Element.Title(this, LS.titles.home);
     this.posts = [];
-
     this.addPosts(posts);
   }
+
+  static title(){ return LS.titles.home; }
 
   createPost(...args){
     const post = new Post(this, ...args);

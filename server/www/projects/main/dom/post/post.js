@@ -1,7 +1,7 @@
 'use strict';
 
-const LS = require('../../../../strings');
-const Element = require('../../../element');
+const LS = require('../../strings');
+const Element = require('../element');
 const PostUser = require('./user');
 const PostDate = require('./date');
 const PostContent = require('./content');
