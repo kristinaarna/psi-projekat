@@ -2481,27 +2481,33 @@ const O = {
     const cache = O.module.cache;
     const pathOrig = path;
 
-    let data;
-    let isScript = 1;
+    let data, type;
 
     if(path in cache) return cache[path];
 
     if(path.endsWith('.js')){
       data = await O.rfAsync(path);
     }else if((data = await O.rfAsync(`${path}.js`)) !== null){
+      type = 2;
       path += '.js';
       if(path in cache) return cache[path];
-    }else if((data = await O.rfAsync(`${path}.json`)) !== null){
-      path += '.json';
-      if(path in cache) return cache[path];
-      isScript = 0;
-    }else{
+    }else if((data = await O.rfAsync(`${path}/index.js`)) !== null){
+      type = 2;
       path += '/index.js';
       if(path in cache) return cache[path];
-      data = await O.rfAsync(path);
-    }
-
-    if(data === null){
+    }else if((data = await O.rfAsync(`${path}.json`)) !== null){
+      type = 1;
+      path += '.json';
+      if(path in cache) return cache[path];
+    }else if((data = await O.rfAsync(`${path}.txt`)) !== null){
+      type = 0;
+      path += '.txt';
+      if(path in cache) return cache[path];
+    }else if((data = await O.rfAsync(`${path}.md`)) !== null){
+      type = 0;
+      path += '.md';
+      if(path in cache) return cache[path];
+    }else{
       O.error(`Failed to load data for project ${JSON.stringify(O.project)}`);
       return null;
     }
@@ -2511,17 +2517,25 @@ const O = {
 
     const module = {exports: {}};
 
-    if(isScript){
-      data = data
-        .replace(/^const (?:O|debug) .+/gm, '')
-        .replace(/ \= require\(/g, ' \= await require(');
+    switch(type){
+      case 0: // Text
+        module.exports = data;
+        break;
 
-      const AsyncFunction = (async () => {}).constructor;
-      const func = new AsyncFunction('window', 'document', 'Function', 'O', 'require', 'module', 'exports', data);
+      case 1: // JSON
+        module.exports = JSON.parse(data);
+        break;
 
-      await func(window, document, Function, O, require, module, module.exports);
-    }else{
-      module.exports = JSON.parse(data)
+      case 2: // JavaScript
+        data = data
+          .replace(/^const (?:O|debug) .+/gm, '')
+          .replace(/ \= require\(/g, ' \= await require(');
+
+        const AsyncFunction = (async () => {}).constructor;
+        const func = new AsyncFunction('window', 'document', 'Function', 'O', 'require', 'module', 'exports', data);
+
+        await func(window, document, Function, O, require, module, module.exports);
+        break;
     }
 
     return cache[pathOrig] = module.exports;

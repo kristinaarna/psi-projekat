@@ -8,7 +8,7 @@ const PageContent = require('./page-content');
 const pages = require('./pages');
 
 /*
-  Document Object Model
+  Document Object Model.
   This class is used for all operations with HTML elements.
   Classes that represent elements should be extended from
   class DOM.Element.
@@ -98,6 +98,10 @@ class DOM extends Element{
 
     if(len === 1){
       switch(path[0]){
+        case 'help':
+          await this.createHelpPage();
+          break;
+
         case 'language':
           await this.createLanguagePage();
           break;
@@ -137,6 +141,11 @@ class DOM extends Element{
 
       page.createPost(user, date, content);
     }
+  }
+
+  async createHelpPage(){
+    const page = new pages.Help(this.pageContent);
+    this.page = page;
   }
 
   async createLanguagePage(){

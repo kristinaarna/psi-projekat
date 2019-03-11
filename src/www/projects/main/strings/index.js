@@ -1,11 +1,23 @@
 'use strict';
 
-const LANGUAGE = 'sr-cyrl-rs';
-
 // Local strings
-const LS = require(`./locales/${LANGUAGE}`);
-const langs = require('./languages');
 
+const LANGUAGE = 'sr-cyrl-rs';
+const dir = `./locales/${LANGUAGE}`;
+
+const LS = require(`${dir}/main`);
+LS.texts = O.obj();
+
+const texts = [
+  'help',
+];
+
+for(const text of texts){
+  const data = require(`${dir}/${text}`);
+  LS.texts[text] = data;
+}
+
+const langs = require('./languages');
 LS.langs = langs;
 LS.lang = LANGUAGE;
 

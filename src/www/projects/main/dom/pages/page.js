@@ -16,6 +16,8 @@ class Page extends Element.Div{
 
   static title(){ O.virtual('title'); }
   title(){ return this.constructor.title(); }
+
+  css(){ return 'page'; }
 };
 
 module.exports = Page;

@@ -10,7 +10,7 @@
 O.enhanceRNG();
 
 // Constants
-const LOADING_DISPLAY = 1;
+const LOADING_DISPLAY = 0;
 const LOADING_TRESHOLD = LOADING_DISPLAY ? 1e-4 : 1;
 
 /*
