@@ -1,4 +1,4 @@
 @echo off
 cls
 
-call node server.js
+call node "./start.js"
