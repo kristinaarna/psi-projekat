@@ -20,7 +20,7 @@ const electronAppScript = path.join(cwd, 'electron-app.js');
 
 const sigintBuf = Buffer.from([0x03]);
 
-var currDir = process.cwd();
+var currDir = path.join(cwd, '../servers');
 var rl = readline.rl();
 
 var proc = null;
@@ -35,8 +35,6 @@ async function main(){
       '/electron-nightly/'
     );
   }
-
-  updatePath('server/node/servers');
 
   askForInput();
 }
