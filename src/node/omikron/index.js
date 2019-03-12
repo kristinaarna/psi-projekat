@@ -54,7 +54,7 @@ function getFramework(){
   var O = func(window, document, getReq());
 
   O.init(0);
-  
+
   O.dirs = dirs;
   init(O);
 
@@ -71,7 +71,7 @@ function getReq(){
   return (...args) => {
     if(args.length !== 1)
       throw new TypeError('Expected 1 argument');
-    
+
     var arg = args[0];
     if(typeof args[0] !== 'string')
       throw new TypeError('Expected a string');

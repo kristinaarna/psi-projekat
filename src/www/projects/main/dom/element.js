@@ -18,7 +18,7 @@ class Element extends O.EventEmitter{
       parentElem = parent;
       parent = null;
     }
-    
+
     this.parent = parent;
     this.parentElem = parentElem;
 
@@ -70,7 +70,7 @@ class Element extends O.EventEmitter{
 
   getCssRec(set){
     if(this.css === Element.prototype.css) return;
-    
+
     set.add(this.css());
     O.proto(this).getCssRec(set);
   }

@@ -128,7 +128,7 @@ class Vector{
 
     var dx = this.x - x;
     var dy = this.y - y;
-    
+
     return Math.sqrt(dx * dx + dy * dy);;
   }
 
@@ -960,7 +960,6 @@ class Map3D{
     if(!(z in d)) return 0;
     d = d[z];
 
-    
     if(!(y in d)) return 0;
     return d[y][x];
   }
@@ -1331,7 +1330,7 @@ class EnhancedRenderingContext{
   resetTransform(resetScale=1){
     if(resetScale)
       this.s = 1;
-    
+
     this.tx = 0;
     this.ty = 0;
     this.rot = 0;
@@ -2332,7 +2331,7 @@ const O = {
       classNames.forEach(className => {
         if(className === '')
           return;
-        
+
         elem.classList.add(className);
       });
     }
@@ -2978,7 +2977,7 @@ const O = {
   /*
     Algorithms
   */
-  
+
   sha256: (() => {
     const MAX_UINT = 2 ** 32;
 

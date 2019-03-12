@@ -12,7 +12,7 @@ class Form extends Element.Region{
 
     this.btnConfirm = null;
   }
-  
+
   createField(ctor, ...args){
     this.br();
     const field = new ctor(this, ...args);

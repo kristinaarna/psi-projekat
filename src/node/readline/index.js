@@ -160,7 +160,7 @@ class ReadlineInterface extends EventEmitter{
 
   push(){
     const {lines, ebuf} = this;
-    
+
     var buf = ebuf.getBuf();
     lines.push(buf.toString());
     ebuf.reset();

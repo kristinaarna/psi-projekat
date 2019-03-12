@@ -6,7 +6,7 @@ const Ebuf = require('../ebuf');
 class Process extends EventEmitter{
   constructor(proc){
     super();
-    
+
     this.proc = proc;
     this.stdin = new Stdin(this, proc.stdin);
 

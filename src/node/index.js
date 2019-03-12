@@ -1,3 +1,3 @@
 'use strict';
 
-require('./node');
+require('./bootstrap');

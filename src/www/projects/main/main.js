@@ -110,7 +110,7 @@ function injectLoading(){
     const f1 = 1 - f;
 
     const kk = 1 - O.module.remaining / MODULES_NUM;
-    
+
     k = k * f + kk * f1;
     const percent = k * 100 + .5 | 0;
 

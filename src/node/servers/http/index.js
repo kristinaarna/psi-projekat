@@ -55,7 +55,7 @@ class HTTPServer extends Server{
       }else{
         let redirect = `/?path=error&status=${status}`;
         if(info !== null) redirect += `&info=${info}`;
-        
+
         res.statusCode = 301;
         res.setHeader('Location', redirect);
         res.end();
