@@ -23,6 +23,11 @@ const allExts = textExts.concat([
   'zip',
 ]);
 
+let cyr = 'абвгдђежзијклљмнњопрстћуфхцчџш';
+
+const allowedChars = O.ca(95, i => O.sfcc(i + 32)).join('') +
+  '\r\n'.split('') + cyr + cyr.toUpperCase();
+
 const dir = path.join(cwd, '../../..');
 
 (async () => {
@@ -56,9 +61,6 @@ const dir = path.join(cwd, '../../..');
         if(str.startsWith(' '))
           e('space at the beginning');
 
-        if(/\t/.test(str))
-          e('tabs instead of spaces');
-
         if(/[\r\n]/.test(str.replace(/\r\n/g, '')))
           e('non-CRLF line breaks');
 
@@ -73,6 +75,18 @@ const dir = path.join(cwd, '../../..');
         lines.forEach((line, i) => {
           if(line.endsWith(' '))
             e('space at the end of line', i);
+
+          if(/\t/.test(line))
+            e('tabs instead of spaces', i);
+
+          if(/ {2}/.test(line.trim()))
+            e('two consecutive spaces', i);
+
+          {
+            const index = line.split('').findIndex(c => !allowedChars.includes(c));
+            if(index !== -1)
+              e(`illegal unicode character \\u${O.hex(O.cc(line[index]), 2)}`, i);
+          }
 
           if(i !== 0){
             const prev = lines[i - 1];

@@ -1,6 +1,6 @@
-Ovaj repozitorijum predstavlja projektni zadatak iz predmeta principi softverskog inženjerstva na Elektrotehničkom fakultetu u Beogradu. Članovi tima su:
+Овај репозиторијум представља пројектни задатак из предмета принципи софтверског инжењерства на Електротехничком факултету у Београду. Чланови тима су:
 
-- Arnautović Kristina
-- Babić Bogdan
-- Gusinjac Kasim
-- Stajčić Božidar
+- Арнаутовић Кристина
+- Бабић Богдан
+- Гусињац Касим
+- Стајчић Божидар
