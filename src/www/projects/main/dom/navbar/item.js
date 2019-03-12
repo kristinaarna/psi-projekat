@@ -13,11 +13,11 @@ class NavbarItem extends Element.Button{
 };
 
 class NavbarItemLeft extends NavbarItem{
-  css(){ return 'left'; }
+  css(){ return 'float-left'; }
 };
 
 class NavbarItemRight extends NavbarItem{
-  css(){ return 'right'; }
+  css(){ return 'float-right'; }
 };
 
 NavbarItem.NavbarItemLeft = NavbarItemLeft;

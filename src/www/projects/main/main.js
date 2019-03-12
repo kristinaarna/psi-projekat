@@ -26,13 +26,13 @@ injectCss();
   The number of all XHR requests that are intended
   to be performed directly or indirectly.
 */
-const MODULES_NUM = 39;
+const MODULES_NUM = 44;
 O.module.remaining = MODULES_NUM;
 
 // Main and loading divs
 const loadingDiv = O.ce(O.body, 'div', 'top loading');
 const mainDiv = O.ce(O.body, 'div', 'top main');
-const modalDiv = O.ce(O.body, 'div', 'top modal');
+const modalDiv = O.ce(O.body, 'div', 'top modal-outer');
 injectLoading();
 
 // Load modules

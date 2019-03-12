@@ -2077,6 +2077,10 @@ const O = {
   lst: null,
   sst: null,
 
+  // Global data
+
+  glob: null,
+
   // Classes
 
   Vector,
@@ -2098,7 +2102,7 @@ const O = {
   init(loadProject=1){
     const CHROME_ONLY = 0;
 
-    O.storage = O.obj();
+    O.glob = O.obj();
 
     var global = O.global = new Function('return this;')();
     var env = 'navigator' in global ? 'browser' : 'node';
@@ -3167,7 +3171,7 @@ const O = {
 
   base64: (() => {
     const encode = data => {
-      const buf = Buffer.from(data);
+      const buf = O.Buffer.from(data);
 
       let str = '';
       let val = 0;
@@ -3201,7 +3205,7 @@ const O = {
       const pad = str.match(/\=*$/)[0].length;
       const extraBytes = pad !== 0 ? pad : 0;
       const len = (str.length >> 2) * 3 - extraBytes;
-      const buf = Buffer.alloc(len);
+      const buf = O.Buffer.alloc(len);
 
       str += str;
 
@@ -3262,11 +3266,9 @@ const O = {
     return {encode, decode};
   })(),
 
-  /*
-    Function that does nothing
-  */
+  // Function which does nothing
 
-  nop(){}
+  nop(){},
 };
 
 O.init();

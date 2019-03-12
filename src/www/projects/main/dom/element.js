@@ -22,10 +22,10 @@ class Element extends O.EventEmitter{
     this.parent = parent;
     this.parentElem = parentElem;
 
-    if(this.parentElem !== null)
-      this.elem = O.ce(this.parentElem, this.getTag(), this.getCss());
-    else
+    if(parentElem === null)
       this.elem = null;
+    else
+      this.elem = O.ce(this.parentElem, this.getTag(), this.getCss());
   }
 
   // Add event listener wrapper
@@ -38,28 +38,23 @@ class Element extends O.EventEmitter{
     });
   }
 
-  clear(){
+  purge(){
     for(const child of this.children)
       child.remove();
+
+    return this;
   }
 
-  reset(){ return this.clear(); }
-  purge(){ return this.clear(); }
+  reset(){ return this.purge(); }
+  clear(){ return this.purge(); }
 
+  get children(){ return Array.from(this.elem.children); }
+  get style(){ return this.elem.style; }
+
+  focus(){ return this.elem.focus(); }
+  getVal(){ return this.elem.textContent; }
+  setVal(text){ this.elem.textContent = text; }
   br(num){ return O.ceBr(this.elem, num); }
-
-  get children(){
-    return Array.from(this.elem.children);
-  }
-
-  getVal(){
-    return this.elem.textContent;
-  }
-
-  setVal(text){
-    this.elem.textContent = text;
-  }
-
   getTag(){ return this.tag(); }
 
   getCss(){
@@ -80,11 +75,15 @@ class Element extends O.EventEmitter{
 };
 
 class Div extends Element{
-  constructor(parent){
-    super(parent);
-  }
-
   tag(){ return 'div'; }
+};
+
+class Left extends Div{
+  css(){ return 'left'; }
+};
+
+class Right extends Div{
+  css(){ return 'right'; }
 };
 
 class Text extends Element{
@@ -223,6 +222,8 @@ class Button extends Span{
 };
 
 Element.Div = Div;
+Element.Left = Left;
+Element.Right = Right;
 Element.Text = Text;
 Element.Span = Span;
 Element.Input = Input;

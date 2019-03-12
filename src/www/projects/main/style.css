@@ -1,6 +1,5 @@
 /* Variables */
 :root{
-  --loading-transition-duration: 1s;
   --main-width: 980px;
   --border-radius: 7px;
   --navbar-height: 60px;
@@ -19,6 +18,7 @@ body{
   width: 100%;
   height: 100%;
   margin: 0px;
+  white-space: pre;
   overflow: hidden;
   background: linear-gradient(
     to bottom right,
@@ -28,9 +28,9 @@ body{
 }
 
 .fade-in-out{
-  transition: opacity var(--loading-transition-duration);
-  -webkit-transition: opacity var(--loading-transition-duration);
-  -moz-transition: opacity var(--loading-transition-duration);
+  transition: opacity var(--transition-duration);
+  -webkit-transition: opacity var(--transition-duration);
+  -moz-transition: opacity var(--transition-duration);
 }
 
 .top{
@@ -42,28 +42,58 @@ body{
 }
 
 .loading{
+  --transition-duration: 1s;
   opacity: 1;
   pointer-events: all;
 }
 
 .main{
+  --transition-duration: 1s;
   text-align: center;
   overflow-y: auto;
   opacity: 0;
   pointer-events: none;
 }
 
-.modal{
+.modal-outer{
+  --transition-duration: .5s;
   background: rgba(0, 0, 0, .75);
   opacity: 0;
   pointer-events: none;
 }
 
+.modal-inner-wrapper{
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-inner{
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  transition: top var(--transition-duration);
+  -webkit-transition: top var(--transition-duration);
+  -moz-transition: top var(--transition-duration);
+}
+
 .left{
-  float: left;
+  width: 100%;
+  text-align: left;
 }
 
 .right{
+  width: 100%;
+  text-align: right;
+}
+
+.float-left{
+  float: left;
+}
+
+.float-right{
   float: right;
 }
 
@@ -160,13 +190,21 @@ body{
 }
 
 .region{
-  width: calc(100% - (20px + 1px) * 2);
-  margin: 20px 0px;
-  margin-left: 12px;
   padding: 8px;
   display: block;
   color: black;
+}
+
+.page .region{
+  width: calc(100% - (20px + 1px) * 2);
+  margin: 20px 0px;
+  margin-left: 12px;
   background: var(--semi-transparent);
+}
+
+.modal{
+  padding: 16px;
+  background: #fff;
 }
 
 .page{
@@ -196,7 +234,6 @@ body{
 .post-content{
   margin-top: 8px;
   display: block;
-  white-space: pre;
 }
 
 .form{
@@ -232,11 +269,17 @@ body{
 
 .page-help{
   text-align: left;
-  white-space: pre;
 }
 
-.text-editor{
+.page .text-editor{
   height: 650px;
+  /*height: 300px;*/
   display: block;
   background: rgba(0, 255, 255, .5);
+}
+
+.btn-ok{
+  margin: 0px;
+  margin-left: 10px;
+  margin-top: 10px;
 }

@@ -7,7 +7,7 @@ const O = require('../../omikron');
 const Server = require('../server');
 
 const SIMULATE_SLOW_CONNECTION = 0;
-const DELAY_RESPONSE = 1e3;
+const DELAY_RESPONSE = 100;
 
 const INDEX_FILE = 'index.htm';
 

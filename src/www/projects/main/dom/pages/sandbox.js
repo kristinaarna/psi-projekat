@@ -11,17 +11,24 @@ class Sandbox extends Page{
     super(parent);
 
     this.editor = new TextEditor(this);
+    this.editor.setVal(LS.texts.scriptTemplate);
     this.start = new Form.ButtonConfirm(this, LS.labels.sandbox.buttons.start);
 
     this.aels();
-
-    this.editor.setVal(LS.texts.scriptTemplate)
-    this.editor.focus();
   }
 
   aels(){
     this.start.on('click', () => {
-      log(this.editor.getVal());
+      const src = this.editor.getVal();
+      let func = null;
+
+      try{ func = new Function(src); }
+      catch{}
+
+      if(func === null)
+        return O.glob.dom.alert(LS.errors.syntaxError);
+
+      O.glob.dom.alert(LS.errors.noimpl);
     });
   }
 
