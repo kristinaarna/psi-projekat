@@ -27,10 +27,16 @@
       "buttons": {
         "confirm": "Потврди"
       }
+    },
+    "sandbox": {
+      "buttons": {
+        "start": "Покрени"
+      }
     }
   },
   "titles": {
     "home": "Почетна страна",
+    "sandbox": "Сандбокс",
     "help": "Помоћ",
     "language": "Подешавање језика",
     "register": "Регистрација",

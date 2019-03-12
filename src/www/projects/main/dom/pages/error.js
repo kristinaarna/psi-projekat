@@ -28,6 +28,8 @@ class Error extends Page{
     const status = O.has(this, 'status') ? this.status : Error[O.static];
     return `${LS.errors.error} ${status}`;
   }
+
+  css(){ return 'page-error'; }
 };
 
 module.exports = Error;

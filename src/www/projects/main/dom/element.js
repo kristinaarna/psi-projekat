@@ -52,11 +52,11 @@ class Element extends O.EventEmitter{
     return Array.from(this.elem.children);
   }
 
-  getText(){
+  getVal(){
     return this.elem.textContent;
   }
 
-  setText(text){
+  setVal(text){
     this.elem.textContent = text;
   }
 
@@ -90,7 +90,7 @@ class Div extends Element{
 class Text extends Element{
   constructor(parent, text=''){
     super(parent);
-    this.setText(text);
+    this.setVal(text);
   }
 
   css(){ return 'text'; }
@@ -108,6 +108,14 @@ class Input extends Element{
       this.elem.placeholder = placeholder;
   }
 
+  getVal(){
+    return this.elem.value;
+  }
+
+  setVal(val){
+    this.elem.value = val;
+  }
+
   tag(){ return 'input'; }
   css(){ return 'input'; }
 };
@@ -116,14 +124,6 @@ class InputText extends Input{
   constructor(parent, placeholder){
     super(parent, placeholder);
     this.elem.type = 'text';
-  }
-
-  getText(){
-    return this.elem.value;
-  }
-
-  setText(val){
-    this.elem.value = val;
   }
 };
 
@@ -134,12 +134,30 @@ class InputPass extends Input{
   }
 };
 
+class InputTextarea extends Input{
+  constructor(parent, placeholder, val=''){
+    super(parent, placeholder);
+    this.setVal(val);
+  }
+
+  tag(){ return 'textarea'; }
+  css(){ return 'textarea'; }
+};
+
 class InputDropdown extends Input{
   constructor(parent, opts=[], selected=null){
     super(parent);
 
     for(const [label, desc] of opts)
       this.addOpt(label, desc, label === selected);
+  }
+
+  getVal(){
+    O.noimpl('getVal');
+  }
+
+  setVal(val){
+    O.noimpl('setVal');
   }
 
   addOpt(label, desc, selected=0){
@@ -210,6 +228,7 @@ Element.Span = Span;
 Element.Input = Input;
 Element.InputText = InputText;
 Element.InputPass = InputPass;
+Element.InputTextarea = InputTextarea;
 Element.InputDropdown = InputDropdown;
 Element.Link = Link;
 Element.Heading = Heading;

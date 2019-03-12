@@ -10,11 +10,13 @@ LS.texts = O.obj();
 
 const texts = [
   'help',
+  'script-template',
 ];
 
 for(const text of texts){
+  const prop = text.replace(/\-./g, a => a[1].toUpperCase());
   const data = require(`${dir}/${text}`);
-  LS.texts[text] = data;
+  LS.texts[prop] = data;
 }
 
 const langs = require('./languages');

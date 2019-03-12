@@ -142,7 +142,7 @@ body{
 
 .page-content{
   width: var(--main-width);
-  height: 100%;
+  min-height: 100%;
   display: inline-block;
   position: relative;
   background: var(--semi-transparent);
@@ -160,12 +160,23 @@ body{
 }
 
 .region{
-  width: calc(100% - (20px + 8px + 1px) * 2);
-  margin: 20px;
+  width: calc(100% - (20px + 1px) * 2);
+  margin: 20px 0px;
+  margin-left: 12px;
   padding: 8px;
   display: block;
   color: black;
   background: var(--semi-transparent);
+}
+
+.page{
+  height: 100%;
+  padding: 0px 16px;
+  text-align: left;
+}
+
+.page-error{
+  text-align: center;
 }
 
 .post{
@@ -193,10 +204,18 @@ body{
 }
 
 .input{
-  width: 40%;
   height: 25px;
   margin: 10px;
   display: inline-block;
+}
+
+.textarea{
+  height: 80px;
+  resize: none;
+}
+
+.form .input{
+  width: 40%;
 }
 
 .form .btn{
@@ -212,7 +231,12 @@ body{
 }
 
 .page-help{
-  padding: 0px 16px;
   text-align: left;
   white-space: pre;
+}
+
+.text-editor{
+  height: 650px;
+  display: block;
+  background: rgba(0, 255, 255, .5);
 }

@@ -98,6 +98,10 @@ class DOM extends Element{
 
     if(len === 1){
       switch(path[0]){
+        case 'sandbox':
+          await this.createSandboxPage();
+          break;
+
         case 'help':
           await this.createHelpPage();
           break;
@@ -141,6 +145,11 @@ class DOM extends Element{
 
       page.createPost(user, date, content);
     }
+  }
+
+  async createSandboxPage(){
+    const page = new pages.Sandbox(this.pageContent);
+    this.page = page;
   }
 
   async createHelpPage(){

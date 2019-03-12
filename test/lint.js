@@ -23,7 +23,7 @@ const allExts = textExts.concat([
   'zip',
 ]);
 
-let cyr = 'абвгдђежзијклљмнњопрстћуфхцчџш';
+const cyr = 'абвгдђежзијклљмнњопрстћуфхцчџш';
 
 const allowedChars = O.ca(95, i => O.sfcc(i + 32)).join('') +
   '\r\n'.split('') + cyr + cyr.toUpperCase();
@@ -62,7 +62,7 @@ const dir = path.join(cwd, '../../..');
           e('space at the beginning');
 
         if(/[\r\n]/.test(str.replace(/\r\n/g, '')))
-          e('non-CRLF line breaks');
+          e('non-CRLF line break');
 
         const lines = O.sanl(str);
 
