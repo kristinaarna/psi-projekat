@@ -273,13 +273,28 @@ body{
 
 .page .text-editor{
   height: 650px;
-  /*height: 300px;*/
   display: block;
   background: rgba(0, 255, 255, .5);
 }
 
-.btn-ok{
+.left .btn,
+.right .btn{
   margin: 0px;
   margin-left: 10px;
   margin-top: 10px;
+}
+
+.competition-title{
+  font-weight: bold;
+}
+
+.competition-date{
+  font-size: small;
+  color: gray;
+  display: block;
+}
+
+.competition-desc{
+  margin-top: 8px;
+  display: block;
 }

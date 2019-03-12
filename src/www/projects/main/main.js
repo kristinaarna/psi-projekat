@@ -26,7 +26,7 @@ injectCss();
   The number of all XHR requests that are intended
   to be performed directly or indirectly.
 */
-const MODULES_NUM = 44;
+const MODULES_NUM = 50;
 O.module.remaining = MODULES_NUM;
 
 // Main and loading divs

@@ -2,6 +2,7 @@
 
 const LS = require('../../strings');
 const Element = require('../element');
+const ButtonOk = require('./btn-ok');
 
 class Modal extends Element.Region{
   constructor(parent){
@@ -10,5 +11,7 @@ class Modal extends Element.Region{
 
   css(){ return 'modal'; }
 };
+
+Modal.ButtonOk = ButtonOk;
 
 module.exports = Modal;

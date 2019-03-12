@@ -26,7 +26,7 @@ class Login extends Page{
     form.addConfirm();
 
     form.on('confirm', () => {
-      location.reload();
+      O.glob.dom.noimpl();
     });
 
     this.form = form;

@@ -12,6 +12,7 @@ const server = require('./server');
 
 const methods = [
   'getHomePagePosts',
+  'getCompetitions',
 ];
 
 module.exports = initMethods(methods);

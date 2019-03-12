@@ -115,6 +115,10 @@ class DOM extends Element{
     this.openModal(cb);
   }
 
+  noimpl(cb){
+    this.alert(LS.errors.noimpl, cb);
+  }
+
   createNavbar(){
     const navbar = new Navbar(this.main);
     this.navbar = navbar;
@@ -157,6 +161,10 @@ class DOM extends Element{
       switch(path[0]){
         case 'sandbox':
           await this.createSandboxPage();
+          break;
+
+        case 'competition':
+          await this.createCompetitionPage();
           break;
 
         case 'help':
@@ -207,6 +215,30 @@ class DOM extends Element{
   async createSandboxPage(){
     const page = new pages.Sandbox(this.pageContent);
     this.page = page;
+  }
+
+  async createCompetitionPage(){
+    const page = new pages.CompetitionPage(this.pageContent);
+    this.page = page;
+
+    const comps = await backend.getCompetitions(0);
+
+    for(const comp of comps){
+      const title = comp.title;
+      const date = new Date(+comp.date);
+      const desc = comp.desc;
+      const applied = comp.applied;
+
+      page.createCompetition(title, date, desc, applied);
+    }
+
+    page.on('stateChange', (comp, applied) => {
+      this.alert(`${
+        applied ?
+        LS.labels.competition.msgs.applied :
+        LS.labels.competition.msgs.gaveUp
+      } ${O.sf(comp.getTitle())}`);
+    });
   }
 
   async createHelpPage(){

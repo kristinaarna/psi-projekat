@@ -28,7 +28,7 @@ class Sandbox extends Page{
       if(func === null)
         return O.glob.dom.alert(LS.errors.syntaxError);
 
-      O.glob.dom.alert(LS.errors.noimpl);
+      O.glob.dom.noimpl();
     });
   }
 

@@ -8,6 +8,10 @@ const methods = {
   async getHomePagePosts(){
     return require('./responses/home-page-posts');
   },
+
+  async getCompetitions(token){
+    return require('./responses/competitions');
+  },
 };
 
 module.exports = methods;
