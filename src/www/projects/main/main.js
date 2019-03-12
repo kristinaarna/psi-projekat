@@ -10,7 +10,7 @@
 O.enhanceRNG();
 
 // Constants
-const LOADING_DISPLAY = 0;
+const LOADING_DISPLAY = 1;
 const LOADING_TRESHOLD = LOADING_DISPLAY ? 1e-4 : 1;
 
 /*
@@ -26,7 +26,7 @@ injectCss();
   The number of all XHR requests that are intended
   to be performed directly or indirectly.
 */
-const MODULES_NUM = 33;
+const MODULES_NUM = 35;
 O.module.remaining = MODULES_NUM;
 
 // Main and loading divs
