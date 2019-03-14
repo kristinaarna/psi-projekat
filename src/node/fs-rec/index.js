@@ -144,5 +144,5 @@ function createDirSync(dirPath){
 }
 
 function formatPath(filePath){
-  return filePath.replace(/\//g, '\\');
+  return filePath.replace(/\//g, FS_SEPARATOR);
 }
