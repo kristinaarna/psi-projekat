@@ -16,6 +16,7 @@ const textExts = codeExts.concat([
   'json',
   'htm',
   'css',
+  'yml',
 ]);
 
 const allExts = textExts.concat([
@@ -51,12 +52,12 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
     if(d.depth === 0) return;
 
     const f = d.fullPath;
-    const sf = O.sf(d.relativeSubPath.replace(/\\/g, '/'));
+    const p = d.relativeSubPath.replace(/\\/g, '/');
+    const sf = O.sf(p);
 
-    const dirs = f.split(/[\/\\]/);
-    if(dirs.includes('.git')) return;
+    if(/^\.git(?:\/|$)/.test(p)) return;
 
-    {
+    if(p !== '.travis.yml'){
       const name = d.isDir ?
         d.name :
         d.name.slice(0, d.name.length - d.ext.length - 1);

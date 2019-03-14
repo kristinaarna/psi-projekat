@@ -4,6 +4,7 @@ const Page = require('./page');
 const Home = require('./home');
 const Sandbox = require('./sandbox');
 const CompetitionPage = require('./competition');
+const Search = require('./search');
 const Help = require('./help');
 const Language = require('./language');
 const Register = require('./register');
@@ -15,6 +16,7 @@ module.exports = {
   Home,
   Sandbox,
   CompetitionPage,
+  Search,
   Help,
   Language,
   Register,

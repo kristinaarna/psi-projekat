@@ -167,6 +167,10 @@ class DOM extends Element{
           await this.createCompetitionPage();
           break;
 
+        case 'search':
+          await this.createSearchPage();
+          break;
+
         case 'help':
           await this.createHelpPage();
           break;
@@ -239,6 +243,11 @@ class DOM extends Element{
         LS.labels.competition.msgs.gaveUp
       } ${O.sf(comp.getTitle())}`);
     });
+  }
+
+  async createSearchPage(){
+    const page = new pages.Search(this.pageContent);
+    this.page = page;
   }
 
   async createHelpPage(){
