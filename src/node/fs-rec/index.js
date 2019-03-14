@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const O = require('../omikron');
 
-const FS_SEPARATOR = '\\';
+const FS_SEPARATOR = '/';
 
 class FileQueueElem{
   constructor(fullPath, relativePath=null, depth=null, name=null, isDir=null, processed=0){
