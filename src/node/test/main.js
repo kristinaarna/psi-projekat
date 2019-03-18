@@ -2,68 +2,80 @@
 
 const fs = require('fs');
 const path = require('path');
+const util = require('util');
 const O = require('../omikron');
-const logSync = require('../log-sync');
 
-const TIME_TO_WAIT = 1e3;
+setTimeout(main);
 
-const cwd = __dirname;
-const testsDir = path.join(cwd, '../../../test');
+function main(){
+  const G = new O.Graph([A, B]);
 
-setTimeout(() => main().catch(err));
+  let a = new A(G, 5);
+  let b = new B(G, 7);
+  let c = new A(G, 123);
+  let d = new B(G, 55);
 
-async function main(){
-  const tests = fs.readdirSync(testsDir);
-  const len = tests.length;
+  a.x = null;
+  a.y = null;
+  b.p = null;
+  b.q = null;
+  c.x = null;
+  c.y = a;
+  d.p = null;
+  d.q = null;
 
-  for(let i = 0; i !== len; i++){
-    const test = tests[i];
+  log(G);
+  log();
 
-    if(O.ext(test) !== 'js')
-      err(new Error(`Invalid test ${O.sf(test)}`));
+  const ser = G.ser();
+  const buf = ser.getOutput(1);
+  log(buf.toString('hex'));
 
-    const name = path.parse(test).name;
-    logSync(`Test ${i + 1}/${len} (${name}) ---> `);
-
-    const file = path.join(testsDir, test);
-    const script = O.rfs(file, 1);
-
-    const func = new Function('O', 'fs', 'path', 'cwd', 'require', 'done', 'err', script);
-    await performTest(func);
-
-    log('OK');
-  }
-
-  log('\nAll tests passed');
+  log();
+  log(new O.Graph([A, B]).deser(new O.Serializer(buf, 1)));
 }
 
-function performTest(func){
-  return new Promise(res => {
-    const timeout = setTimeout(() => {
-      err(new Error('Time limit exceeded'));
-    }, TIME_TO_WAIT);
-
-    func(O, fs, path, cwd, require, () => {
-      clearTimeout(timeout);
-      res();
-    }, msg => {
-      err(new Error(msg));
-    });
-  });
-}
-
-function err(err){
-  log('FAILED\n');
-
-  const isErr = err instanceof Error;
-  const details = isErr ? `: ${err.message}` : '';
-  log(`\nERROR${details}\n`);
-
-  if(!isErr){
-    log(err);
-    log('\n');
+class A extends O.GraphNode{
+  constructor(graph, num){
+    super(graph);
+    this.num = num;
   }
 
-  log('TEST FAILED!');
-  O.proc.exit(1);
+  ser(ser=new O.Serializer()){
+    ser.writeInt(this.num);
+    return ser;
+  }
+
+  deser(ser){
+    this.num = ser.readInt();
+    return this;
+  }
+
+  [util.inspect.custom](){ return `[${f(this.x)}, ${f(this.y)}]`; }
+  static keys(){ return ['x', 'y']; }
+};
+
+class B extends O.GraphNode{
+  constructor(graph, num){
+    super(graph);
+    this.num = num;
+  }
+
+  ser(ser=new O.Serializer()){
+    ser.writeInt(this.num);
+    return ser;
+  }
+
+  deser(ser){
+    this.num = ser.readInt();
+    return this;
+  }
+
+  [util.inspect.custom](){ return `[${f(this.p)}, ${f(this.q)}]`; }
+  static keys(){ return ['p', 'q']; }
+};
+
+function f(node){
+  if(node === null) return 'null';
+  return String(node.num);
 }

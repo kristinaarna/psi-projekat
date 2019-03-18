@@ -15,7 +15,7 @@ function main(){
 
   switch(arg.slice(2)){
     case 'start': load('node'); break;
-    case 'test': load('test'); break;
+    case 'test': load('tests'); break;
     default: err(`Invalid argument ${O.sf(arg)}`); break;
   }
 }

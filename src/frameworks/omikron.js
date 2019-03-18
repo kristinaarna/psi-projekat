@@ -1876,7 +1876,7 @@ class Serializer extends IO{
       mask >>= 1;
     }
 
-    return num;
+    return this;
   }
 
   read(max=1){
@@ -1909,7 +1909,7 @@ class Serializer extends IO{
       num >>= 1;
     }
 
-    super.write(0);
+    return super.write(0);
   }
 
   readInt(){
@@ -1933,6 +1933,8 @@ class Serializer extends IO{
 
     for(const byte of buf)
       this.write(byte, 255);
+
+    return this;
   }
 
   readBuf(){
@@ -1946,7 +1948,7 @@ class Serializer extends IO{
   }
 
   writeStr(str){
-    this.writeBuf(O.Buffer.from(str, 'utf8'));
+    return this.writeBuf(O.Buffer.from(str, 'utf8'));
   }
 
   readStr(){
@@ -1972,6 +1974,150 @@ class Serializer extends IO{
 class Serializable{
   ser(ser=new O.Serializer()){ O.virtual('ser'); }
   deser(ser){ O.virtual('deser'); }
+  static deser(ser){ O.virtual('deser'); } // Optional
+
+  reser(){
+    return this.deser(new O.Serializer(this.ser().getOutput()));
+  }
+};
+
+class Graph extends Serializable{
+  constructor(nodeCtors, maxSize=null){
+    super();
+
+    this.nodeCtors = nodeCtors;
+    this.maxSize = maxSize;
+    this.nodes = new Set();
+    this.ctorsNum = nodeCtors.length;
+
+    {
+      const ctorsMap = new Map();
+      const ctorsKeys = new Map();
+
+      nodeCtors.forEach((ctor, index) => {
+        ctorsMap.set(ctor, index);
+        ctorsKeys.set(ctor, ctor.keys());
+      });
+
+      this.ctorsMap = ctorsMap;
+      this.ctorsKeys = ctorsKeys;
+    }
+  }
+
+  addNode(node){
+    const {maxSize, nodes} = this;
+
+    if(maxSize !== null && nodes.size === maxSize){
+      this.reser();
+      if(nodes.size === maxSize)
+        throw new RangeError('Maximum graph size exceeded');
+    }
+
+    nodes.add(node);
+  }
+
+  ser(ser=new O.Serializer()){
+    const {nodes, ctorsNum, ctorsMap, ctorsKeys} = this;
+    const lastCtorIndex = ctorsNum - 1;
+
+    const all = new Set(nodes);
+    const done = new Map();
+    const queue = [];
+
+    const lastNodeIndex = all.size - 1;
+    ser.writeInt(all.size);
+
+    while(all.size !== 0){
+      let first = 1;
+
+      queue.push(all.keys().next().value);
+
+      while(queue.length !== 0){
+        const node = queue.shift();
+
+        if(node === null){
+          ser.write(0);
+          continue;
+        }else if(!first){
+          ser.write(1);
+        }
+
+        const ctor = node.constructor;
+        const seen = done.has(node);
+        const index = seen ? done.get(node) : done.size;
+
+        if(first) first = 0;
+        else ser.write(index, Math.min(done.size, lastNodeIndex));
+        if(seen) continue;
+
+        all.delete(node);
+        done.set(node, index);
+
+        ser.write(ctorsMap.get(ctor), lastCtorIndex);
+        node.ser(ser);
+
+        for(const key of ctorsKeys.get(ctor))
+          queue.push(node[key]);
+      }
+    }
+
+    return ser;
+  }
+
+  deser(ser){
+    const {nodeCtors, ctorsNum, ctorsKeys} = this;
+    const lastCtorIndex = ctorsNum - 1;
+
+    const nodes = new Set();
+    this.nodes = nodes;
+
+    const nodesNum = ser.readInt();
+    const lastNodeIndex = nodesNum - 1;
+
+    const done = [];
+    const queue = [];
+
+    while(nodes.size !== nodesNum){
+      let first = 1;
+
+      while(queue.length !== 0 || first){
+        const isNull = first ? 0 : !ser.read();
+        const index = first ? nodes.size : isNull ? -1 : ser.read(Math.min(nodes.size, lastNodeIndex));
+        const seen = isNull || index !== nodes.size;
+        const node = seen ? isNull ? null : done[index] : new nodeCtors[ser.read(lastCtorIndex)](this);
+
+        if(first){
+          first = 0;
+        }else{
+          const elem = queue[0];
+          const keys = ctorsKeys.get(elem[0].constructor);
+          elem[0][keys[elem[1]++]] = node;
+          if(elem[1] === keys.length) queue.shift();
+        }
+
+        if(seen) continue;
+
+        done.push(node);
+        node.deser(ser);
+
+        if(ctorsKeys.get(node.constructor).length !== 0)
+          queue.push([node, 0]);
+      }
+    }
+
+    return this;
+  }
+};
+
+class GraphNode extends Serializable{
+  constructor(graph){
+    super();
+
+    this.graph = graph;
+    graph.addNode(this);
+  }
+
+  static keys(){ O.virtual('keys'); }
 };
 
 class Storage extends Serializable{
@@ -2097,6 +2243,8 @@ const O = {
   IO,
   Serializer,
   Serializable,
+  Graph,
+  GraphNode,
   Storage,
 
   init(loadProject=1){
