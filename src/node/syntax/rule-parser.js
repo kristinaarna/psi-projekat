@@ -315,7 +315,7 @@ function parse(syntax, str){
 
         /**
          * Separator is not allowed for range with `end <= 1`
-         * Throw error instead of breaking this section, becase
+         * Throw error instead of breaking this section, because
          * we ensured the separator is present and thus should be parsed
          */
         if(r.isClosedRight() && r.end <= 1)

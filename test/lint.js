@@ -78,7 +78,7 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
       if(!allExts.includes(d.ext))
         e(`forbidden extension ${O.sf(d.ext)}`);
 
-      if(textExts.includes(d.ext)){
+      if(d.ext !== 'txt' && textExts.includes(d.ext)){
         const str = O.rfs(f, 1);
 
         if(str.length === 0)
@@ -90,7 +90,18 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
         if(/[\r\n]/.test(str.replace(/\r\n/g, '')))
           e('non-CRLF line break');
 
-        const lines = O.sanl(str);
+        const lines = O.sanl(str).map(line => {
+          if(/^(?: {2})* \*/.test(line))
+            line = line.replace(' *', '**');
+
+          if(line.trimLeft().startsWith('*')){
+            line = line.replace(/\*(.*)/, (a, b) => {
+              return b.replace(/ +/g, ' ');
+            });
+          }
+
+          return line;
+        });
 
         if(lines[0].length === 0)
           e('new line at the beginning');

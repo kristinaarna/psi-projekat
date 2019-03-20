@@ -9,7 +9,7 @@ const TEST = 0;
 
 const cwd = __dirname;
 const examplesDir = path.join(cwd, 'examples');
-const exampleDir = path.join(examplesDir, 'JavaScript');
+const exampleDir = path.join(examplesDir, 'javascript');
 const ctxFile = path.join(exampleDir, 'context.js');
 
 const testDir = path.join(cwd, 'test');
