@@ -8,21 +8,24 @@ const O = require('../omikron');
 setTimeout(main);
 
 function main(){
-  const G = new O.Graph([A, B]);
+  const G = new O.Graph([A, B], 3);
 
   let a = new A(G, 5);
-  let b = new B(G, 7);
-  let c = new A(G, 123);
-  let d = new B(G, 55);
+  a.x = a;
+  a.y = a;
 
-  a.x = null;
-  a.y = null;
-  b.p = null;
-  b.q = null;
-  c.x = null;
-  c.y = a;
-  d.p = null;
-  d.q = null;
+  let b = new B(G, 7);
+  b.p = b;
+  b.q = b;
+
+  let c = new A(G, 123);
+  c.x = c;
+  c.y = c;
+  a.x = c;
+
+  let d = new B(G, 55);
+  d.p = d;
+  d.q = d;
 
   log(G);
   log();

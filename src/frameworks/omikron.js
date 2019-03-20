@@ -2005,15 +2005,15 @@ class Graph extends Serializable{
   }
 
   addNode(node){
-    const {maxSize, nodes} = this;
+    const {maxSize} = this;
 
-    if(maxSize !== null && nodes.size === maxSize){
-      this.reser();
-      if(nodes.size === maxSize)
+    if(maxSize !== null && this.size === maxSize){
+      this.cleanup();
+      if(this.size === maxSize)
         throw new RangeError('Maximum graph size exceeded');
     }
 
-    nodes.add(node);
+    this.nodes.add(node);
   }
 
   ser(ser=new O.Serializer()){
@@ -2030,7 +2030,7 @@ class Graph extends Serializable{
     while(all.size !== 0){
       let first = 1;
 
-      queue.push(all.keys().next().value);
+      queue.push(O.first(all));
 
       while(queue.length !== 0){
         const node = queue.shift();
@@ -2107,6 +2107,32 @@ class Graph extends Serializable{
 
     return this;
   }
+
+  cleanup(){
+    const {ctorsKeys} = this;
+    if(this.size === 0) return this;
+
+    const nodes = new Set();
+    const queue = [O.first(this.nodes)];
+
+    while(queue.length !== 0){
+      const node = queue.shift();
+
+      nodes.add(node);
+
+      for(const key of ctorsKeys.get(node.constructor)){
+        const next = node[key];
+        if(next === null || nodes.has(next)) continue;
+        queue.push(next);
+      }
+    }
+
+    this.nodes = nodes;
+
+    return this;
+  }
+
+  get size(){ return this.nodes.size; }
 };
 
 class GraphNode extends Serializable{
@@ -2832,6 +2858,13 @@ const O = {
     return a;
   },
 
+  // For sets
+  first(set, defaultVal=null){
+    if(set.size === 0) return defaultVal;
+    return set.keys().next().value;
+  },
+
+  // For arrays
   last(arr, defaultVal=null){
     if(arr.length === 0) return defaultVal;
     return arr[arr.length - 1];
