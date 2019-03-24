@@ -2308,9 +2308,6 @@ const O = {
     if(loadProject){
       O.project = 'main';
 
-      if(!O.projectTest(O.project))
-        return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
-
       if(O.project == null){
         O.rf(`projects.txt`, (status, projects) => {
           if(status != 200) return O.error(`Failed to load projects list.`);
@@ -2322,6 +2319,9 @@ const O = {
           });
         });
       }else{
+        if(!O.projectTest(O.project))
+        return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
+
         O.req(`/projects/${O.project}/main`).catch(O.error);
       }
     }

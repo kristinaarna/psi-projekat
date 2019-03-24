@@ -56,6 +56,7 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
     const sf = O.sf(p);
 
     if(/^\.git(?:\/|$)/.test(p)) return;
+    if(p === '.gitignore') return;
 
     if(p !== '.travis.yml'){
       const name = d.isDir ?
