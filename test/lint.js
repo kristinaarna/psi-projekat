@@ -92,12 +92,12 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
           e('non-CRLF line break');
 
         const lines = O.sanl(str).map(line => {
-          if(/^(?: {2})* \*/.test(line))
-            line = line.replace(' *', '**');
-
           if(line.trimLeft().startsWith('*')){
-            line = line.replace(/\*(.*)/, (a, b) => {
-              return b.replace(/ +/g, ' ');
+            if(/^(?: {2})* \*/.test(line))
+              line = line.replace(' *', '**');
+
+            line = line.replace(/\*.*/, a => {
+              return a.replace(/ +/g, ' ');
             });
           }
 
