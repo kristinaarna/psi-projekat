@@ -1,4 +1,4 @@
 @echo off
 cls
 
-call node "./src" "--test"
+call node ./src --test
