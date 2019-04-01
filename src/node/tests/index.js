@@ -4,4 +4,4 @@ const fs = require('fs');
 const path = require('path');
 const O = require('../omikron');
 
-require('./main.js')
+require('./main.js');
