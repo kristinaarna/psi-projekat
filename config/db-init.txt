@@ -3,17 +3,14 @@ CREATE TABLE User
 (
   idUser               INTEGER NOT NULL AUTO_INCREMENT,
   nick                 VARCHAR(64) NOT NULL,
-  firstName            VARCHAR(64) NULL,
-  lastName             VARCHAR(64) NULL,
+  fullName             VARCHAR(64) NULL,
   isMod                BIT NOT NULL,
-  token                BINARY(64) NULL,
+  token                VARCHAR(1024) NULL,
   email                VARCHAR(1024) NOT NULL,
-  verificationCode     BINARY(64) NULL,
   registrationDate     TIMESTAMP NULL,
-  deletionDate         TIMESTAMP NULL,
-  deletionReason       VARCHAR(1024) NULL,
   description          text NULL,
   displayEmail         BIT NULL,
+  passHash             VARCHAR(1024) NULL,
   PRIMARY KEY (idUser)
 );
 

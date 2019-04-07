@@ -5,7 +5,7 @@
     "php": "C:/wamp/bin/php/php7.2.4/php.exe",
     "mysql": "C:/wamp/bin/mysql/mysql5.7.21/bin/mysql.exe",
     "python": "%userprofile%/AppData/Local/Programs/Python/Python37/python.exe",
-    "ffmpeg": "C:/Program Files/Ffmpeg/bin/original/ffmpeg.exe"
+    "ffmpeg": "C:/Program Files/FFmpeg/bin/original/ffmpeg.exe"
   },
 
   "dirs": {

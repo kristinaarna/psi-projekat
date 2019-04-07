@@ -7,22 +7,28 @@ const O = require('../omikron');
 const config = require('../config');
 
 const cwd = __dirname;
-const phpDir = path.join(cwd, '../../php')
+const phpDir = path.join(cwd, '../../php');
+
+/*
+  This semaphore ensures that only one query will be executed at a time.
+  That is important, because some queries that are implemented in the PHP
+  directory `queries` rely on that assumption.
+*/
+const sem = new O.Semaphore(1);
 
 module.exports = {
   exec,
 };
 
-function exec(file, params=null){
-  if(O.ext(file) !== 'php') file += '.php';
-  file = path.join(phpDir, file);
+async function exec(query, args=null){
+  await sem.wait();
 
   return new Promise((res, rej) => {
     const proc = cp.spawn(config.exe.php, [
       '-d', 'display-errors=On',
-      file,
+      'main.php',
     ], {
-      cwd: path.join(file, '..'),
+      cwd: phpDir,
     });
 
     const outBufs = [];
@@ -35,7 +41,10 @@ function exec(file, params=null){
       const outStr = Buffer.concat(outBufs).toString('utf8').trim();
       const errStr = Buffer.concat(errBufs).toString('utf8').trim();
 
-      if(errStr.length !== 0) return rej(errStr);
+      if(errStr.length !== 0){
+        log(errStr);
+        return rej('php');
+      }
 
       if(code !== 0){
         if(outStr !== 0) return rej(outStr);
@@ -53,11 +62,13 @@ function exec(file, params=null){
       }catch{}
 
       if(!ok) return rej(`Invalid JSON: ${O.sf(outStr)}`);
-      res(data);
+      if(data.error !== null) return rej(data.error);
+
+      res(data.data);
     })
 
     proc.on('error', rej);
 
-    proc.stdin.end(JSON.stringify(params) + '\n');
-  });
+    proc.stdin.end(JSON.stringify({query, args}) + '\n');
+  }).finally(() => sem.signal());
 }

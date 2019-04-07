@@ -261,8 +261,7 @@ class DOM extends Element{
   }
 
   async createRegisterPage(){
-    const {token} = await backend.getCaptcha();
-    const page = new pages.Register(this.pageContent, token);
+    const page = new pages.Register(this.pageContent);
     this.page = page;
   }
 

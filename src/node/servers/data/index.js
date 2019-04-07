@@ -48,8 +48,12 @@ class DataServer extends Server{
 
       processJson(json).then(data => {
         res.end(JSON.stringify({data, error: null}));
-      }).catch(err => {
-        const error = err.message;
+      }).catch(error => {
+        if(error instanceof Error){
+          log(error);
+          error = 'data';
+        }
+
         res.end(JSON.stringify({data: null, error}));
       });
     });

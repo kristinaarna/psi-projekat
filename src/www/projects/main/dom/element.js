@@ -53,6 +53,8 @@ class Element extends O.EventEmitter{
   get val(){ return this.elem.textContent; }
   set val(val){ this.elem.textContent = val; }
 
+  remove(){ return this.parent.removeChild(this.elem); }
+  removeChild(child){ return this.elem.removeChild(child); }
   focus(){ return this.elem.focus(); }
   br(num){ return O.ceBr(this.elem, num); }
   getTag(){ return this.tag(); }

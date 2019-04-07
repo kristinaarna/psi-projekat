@@ -1,3 +1,0 @@
-<?php
-  $sth = null;
-?>

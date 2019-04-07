@@ -1,23 +1,36 @@
 'use strict';
 
 const LS = require('../../strings');
+const backend = require('../../backend');
 const Element = require('../element');
 const Page = require('./page');
 const Form = require('../form');
 
 class Register extends Page{
-  constructor(parent, captchaToken){
+  constructor(parent){
     super(parent);
 
     const form = new Form(this);
+    this.form = form;
 
     const fields = [
-      ['InputText', 'nick', 'username'],
+      ['InputText', 'nick', 'nick'],
       ['InputText', 'email', 'email'],
       ['InputPass', 'pass', 'pass'],
       ['InputPass', 'pass2', 'pass2'],
-      ['InputText', 'captcha', 'captcha'],
+      ['InputText', 'captchaStr', 'captcha'],
     ];
+
+    O.ael('keydown', e => {
+      if(e.code === 'F4'){
+        O.pd(e);
+        const fs = form.fields;
+        fs.nick.val = 'a';
+        fs.email.val = 'a@a';
+        fs.pass.val = '123456xX';
+        fs.pass2.val = '123456xX';
+      }
+    });
 
     this.fields = fields.map(([ctorName, fieldName, labelName]) => {
       const ctor = Element[ctorName];
@@ -26,14 +39,13 @@ class Register extends Page{
       form.createField(ctor, fieldName, label);
     });
 
-    form.addCaptcha(captchaToken);
-    form.addConfirm();
-
     form.on('confirm', fields => {
-      O.glob.dom.alert(O.sf(fields));
+      dom.noimpl();
     });
 
-    this.form = form;
+    form.addCaptcha().then(() => {
+      form.addConfirm();
+    });
   }
 
   static title(){ return LS.titles.register; }

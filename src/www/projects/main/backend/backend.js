@@ -22,8 +22,8 @@ function initMethods(methods){
   const obj = O.obj();
 
   for(const method of methods){
-    obj[method] = (...args) => {
-      return send(method, ...args);
+    obj[method] = async (...args) => {
+      return await send(method, ...args);
     };
   }
 
@@ -33,6 +33,6 @@ function initMethods(methods){
 async function send(method, ...args){
   const obj = {method, args};
   const res = await server.send(obj);
-  if(res.error !== null) throw new Error(res.error);
+  if(res.error !== null) throw res.error;
   return res.data;
 }

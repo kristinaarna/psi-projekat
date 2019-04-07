@@ -1,6 +1,7 @@
 'use strict';
 
 const LS = require('../../strings');
+const backend = require('../../backend');
 const Element = require('../element');
 const Captcha = require('../captcha');
 const ButtonConfirm = require('./btn-confirm');
@@ -9,7 +10,7 @@ class Form extends Element.Region{
   constructor(parent){
     super(parent);
 
-    this.fields = [];
+    this.fields = O.obj();
 
     this.captcha = null;
     this.btnConfirm = null;
@@ -18,17 +19,22 @@ class Form extends Element.Region{
   createField(ctor, ...args){
     this.br();
     const field = new ctor(this, ...args);
-    return this.addField(field, 0);
+    return this.addField(field);
   }
 
   addField(field){
-    this.fields.push(field);
-    return field;
+    return this.fields[field.name] = field;
   }
 
-  addCaptcha(token){
+  async addCaptcha(){
     this.br();
+    const token = await backend.getCaptcha();
     return this.captcha = new Captcha(this, token);
+  }
+
+  async newCaptcha(){
+    const token = await backend.getCaptcha();
+    this.captcha.token = token;
   }
 
   addConfirm(label){
@@ -44,14 +50,19 @@ class Form extends Element.Region{
     const {fields} = this;
     const obj = O.obj();
 
-    for(const field of fields)
+    for(const fieldName in fields){
+      const field = fields[fieldName];
       obj[field.name] = field.val;
+    }
+
+    if(this.captcha)
+      obj.captchaToken = this.captcha.token;
 
     this.emit('confirm', obj);
   }
 
   br(){
-    if(this.fields.length === 0) return;
+    if(O.keys(this.fields).length === 0) return;
     super.br();
   }
 

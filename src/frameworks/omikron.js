@@ -2221,6 +2221,39 @@ class Storage extends Serializable{
   }
 };
 
+class Semaphore{
+  constructor(s){
+    this.s = s;
+    this.blocked = [];
+  }
+
+  init(s){
+    this.s = s;
+  }
+
+  wait(){
+    if(this.s > 0){
+      this.s--;
+      return;
+    }
+
+    return new Promise(res => {
+      this.blocked.push(res);
+    });
+  }
+
+  signal(){
+    const {blocked} = this;
+
+    if(blocked.length === 0){
+      this.s++;
+      return;
+    }
+
+    setTimeout(blocked.shift());
+  }
+};
+
 const O = {
   global: null,
   isNode: null,
@@ -2286,6 +2319,7 @@ const O = {
   Graph,
   GraphNode,
   Storage,
+  Semaphore,
 
   init(loadProject=1){
     const CHROME_ONLY = 0;

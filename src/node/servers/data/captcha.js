@@ -32,7 +32,7 @@ let id = 0n;
 class Captcha{
   constructor(token, str, file, timeout=EXPIRE_TIMEOUT){
     this.token = token;
-    this.str = str;
+    this.str = str.toLowerCase();
     this.file = file;
     this.timeout = timeout;
 
@@ -84,7 +84,7 @@ class Captcha{
   }
 
   check(str){
-    return str === this.str;
+    return str.toLowerCase() === this.str;
   }
 
   expire(){
