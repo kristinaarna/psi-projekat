@@ -8,14 +8,13 @@ setTimeout(main);
 
 function main(){
   const args = process.argv.slice(2);
-  if(args.length !== 1) err('Expected exactly 1 argument');
+  if(args.length === 0) err('Expected at least 1 argument');
 
-  const arg = args[0];
-  if(!arg.startsWith('--')) err('Argument must start with "--"');
-
-  switch(arg.slice(2)){
+  switch(args[0]){
+    case 'init': load('init'); break;
     case 'start': load('node'); break;
     case 'test': load('tests'); break;
+    case 'find': load('syntax-finder'); break;
     default: err(`Invalid argument ${O.sf(arg)}`); break;
   }
 }

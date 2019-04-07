@@ -1,0 +1,80 @@
+
+CREATE TABLE User
+(
+  idUser               INTEGER NOT NULL AUTO_INCREMENT,
+  nick                 VARCHAR(64) NOT NULL,
+  firstName            VARCHAR(64) NULL,
+  lastName             VARCHAR(64) NULL,
+  isMod                BIT NOT NULL,
+  token                BINARY(64) NULL,
+  email                VARCHAR(1024) NOT NULL,
+  verificationCode     BINARY(64) NULL,
+  registrationDate     TIMESTAMP NULL,
+  deletionDate         TIMESTAMP NULL,
+  deletionReason       VARCHAR(1024) NULL,
+  description          text NULL,
+  displayEmail         BIT NULL,
+  PRIMARY KEY (idUser)
+);
+
+CREATE TABLE Post
+(
+  idPost               INTEGER NOT NULL AUTO_INCREMENT,
+  postedBy             INTEGER NOT NULL,
+  content              text NOT NULL,
+  creationDate         TIMESTAMP NOT NULL,
+  PRIMARY KEY (idPost,postedBy),
+  FOREIGN KEY (postedBy) REFERENCES User (idUser)
+);
+
+CREATE TABLE Goal
+(
+  idGoal               INTEGER NOT NULL AUTO_INCREMENT,
+  description          text NULL,
+  PRIMARY KEY (idGoal)
+);
+
+CREATE TABLE Competition
+(
+  idComp               INTEGER NOT NULL AUTO_INCREMENT,
+  createdBy            INTEGER NOT NULL,
+  idGoal               INTEGER NOT NULL,
+  description          text NULL,
+  startDate            TIMESTAMP NULL,
+  endDate              TIMESTAMP NULL,
+  maxUsers             INTEGER NULL,
+  points               INTEGER NULL,
+  PRIMARY KEY (idComp,createdBy,idGoal),
+  FOREIGN KEY (createdBy) REFERENCES User (idUser),
+  FOREIGN KEY (idGoal) REFERENCES Goal (idGoal)
+);
+
+CREATE TABLE Participating
+(
+  user                 INTEGER NOT NULL AUTO_INCREMENT,
+  comp                 INTEGER NOT NULL,
+  createdBy            INTEGER NOT NULL,
+  idGoal               INTEGER NOT NULL,
+  applicationDate      TIMESTAMP NULL,
+  PRIMARY KEY (user,comp,createdBy,idGoal),
+  FOREIGN KEY (user) REFERENCES User (idUser),
+  FOREIGN KEY (comp, createdBy, idGoal) REFERENCES Competition (idComp, createdBy, idGoal)
+);
+
+CREATE TABLE Functionality
+(
+  idFunc               INTEGER NOT NULL AUTO_INCREMENT,
+  idUser               INTEGER NOT NULL,
+  description          VARCHAR(1024) NULL,
+  PRIMARY KEY (idFunc,idUser),
+  FOREIGN KEY (idUser) REFERENCES User (idUser)
+);
+
+CREATE TABLE Avatar
+(
+  idAvatar             INTEGER NOT NULL AUTO_INCREMENT,
+  belongsTo            INTEGER NOT NULL,
+  file                 VARCHAR(1024) NULL,
+  PRIMARY KEY (idAvatar,belongsTo),
+  FOREIGN KEY (belongsTo) REFERENCES User (idUser)
+);

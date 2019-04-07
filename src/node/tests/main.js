@@ -5,7 +5,7 @@ const path = require('path');
 const O = require('../omikron');
 const logSync = require('../log-sync');
 
-const TIME_TO_WAIT = 1e3;
+const TIME_TO_WAIT = 10e3;
 
 const cwd = __dirname;
 const testsDir = path.join(cwd, '../../../test');
@@ -13,6 +13,8 @@ const testsDir = path.join(cwd, '../../../test');
 setTimeout(() => main().catch(err));
 
 async function main(){
+  aels();
+
   const tests = fs.readdirSync(testsDir);
   const len = tests.length;
 
@@ -35,6 +37,12 @@ async function main(){
   }
 
   log('\nAll tests passed');
+}
+
+function aels(){
+  O.proc.on('sigint', () => {
+    err('Received SIGINT');
+  });
 }
 
 function performTest(func){

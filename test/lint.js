@@ -3,11 +3,15 @@
 const fsRec = require('../fs-rec');
 
 const TAB_SIZE = 2;
+const MAX_LINE_LEN = 200;
+
 const TAB = ' '.repeat(TAB_SIZE);
 
 const codeExts = [
   'bat',
   'js',
+  'php',
+  'sql',
 ];
 
 const textExts = codeExts.concat([
@@ -16,15 +20,17 @@ const textExts = codeExts.concat([
   'json',
   'htm',
   'css',
+  'xml',
   'yml',
 ]);
 
 const allExts = textExts.concat([
   'png',
   'pdf',
-  'docx',
-  'blend',
   'zip',
+  'docx',
+  'erwin',
+  'blend',
 ]);
 
 const latLower = O.ca(26, i => O.sfcc(i + O.cc('a'))).join('');
@@ -44,10 +50,10 @@ const upper = latUpper + cyrUpper;
 
 const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
 
-(async () => {
+(() => {
   const dir = path.join(cwd, '../../..');
 
-  await fsRec.processFilesSync(dir, d => {
+  fsRec.processFilesSync(dir, d => {
     if(d.processed) return;
     if(d.depth === 0) return;
 
@@ -55,7 +61,7 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
     const p = d.relativeSubPath.replace(/\\/g, '/');
     const sf = O.sf(p);
 
-    if(/^\.git(?:\/|$)/.test(p)) return;
+    if(/^(?:\.git|data)(?:\/|$)/.test(p)) return;
     if(p === '.gitignore') return;
 
     if(p !== '.travis.yml'){
@@ -122,6 +128,9 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
           if(/ {2}/.test(line.trim()))
             e('two consecutive spaces', i);
 
+          if(isCode && line.length > MAX_LINE_LEN)
+            e(`more than ${MAX_LINE_LEN} characters in a single line`, i);
+
           {
             let chars = line.split('');
             let index;
@@ -175,4 +184,6 @@ const allowedChars = `\r\n${O.ca(95, i => O.sfcc(i + 32)).join('')}${cyr}`;
 
     err('Unsupported file system entry type');
   });
-})().then(done).catch(err);
+})();
+
+done();

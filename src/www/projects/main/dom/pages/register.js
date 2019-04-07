@@ -6,30 +6,31 @@ const Page = require('./page');
 const Form = require('../form');
 
 class Register extends Page{
-  constructor(parent){
+  constructor(parent, captchaToken){
     super(parent);
 
     const form = new Form(this);
 
     const fields = [
-      ['InputText', 'username'],
-      ['InputText', 'email'],
-      ['InputPass', 'pass'],
-      ['InputPass', 'pass2'],
-      ['InputText', 'captcha'],
+      ['InputText', 'nick', 'username'],
+      ['InputText', 'email', 'email'],
+      ['InputPass', 'pass', 'pass'],
+      ['InputPass', 'pass2', 'pass2'],
+      ['InputText', 'captcha', 'captcha'],
     ];
 
-    this.fields = fields.map(([ctorName, labelName]) => {
+    this.fields = fields.map(([ctorName, fieldName, labelName]) => {
       const ctor = Element[ctorName];
       const label = LS.labels.forms.fields[labelName];
 
-      form.createField(ctor, label);
+      form.createField(ctor, fieldName, label);
     });
 
+    form.addCaptcha(captchaToken);
     form.addConfirm();
 
-    form.on('confirm', () => {
-      O.glob.dom.noimpl();
+    form.on('confirm', fields => {
+      O.glob.dom.alert(O.sf(fields));
     });
 
     this.form = form;

@@ -1,23 +1,32 @@
 'use strict';
 
-class LocalStorage extends O.Storage{
-  constructor(){
-    super(O.lst);
-  }
+const EnhancedStorage = require('./enhanced-storage');
 
-  static get version(){ return 0; }
+const keys = [
+  'token',
+];
+
+class LocalStorage extends EnhancedStorage{
+  constructor(){
+    super(O.lst, O.project, keys);
+  }
 
   init(){
     const state = O.obj();
     this.state = state;
 
-    state.signedIn = 0;
+    state.token = null;
   }
 
   ser(ser=new O.Serializer()){
     const {state} = this;
 
-    ser.write(state.signedIn);
+    if(state.token){
+      ser.write(1);
+      ser.writeBuf(state.token);
+    }else{
+      ser.write(0);
+    }
 
     return ser;
   }
@@ -26,20 +35,12 @@ class LocalStorage extends O.Storage{
     const state = O.obj();
     this.state = state;
 
-    state.signedIn = ser.read();
+    state.token = ser.read() ? ser.readBuf() : null;
 
     return this;
   }
 
-  get signedIn(){
-    return this.state.signedIn || O.sst.signedIn;
-  }
-
-  set signedIn(val){
-    this.state.signedIn = val;
-    this.save();
-    O.sst.signedIn = val;
-  }
+  get signedIn(){ return this.token !== null; }
 };
 
 module.exports = LocalStorage;

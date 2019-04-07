@@ -11,7 +11,7 @@ class Sandbox extends Page{
     super(parent);
 
     this.editor = new TextEditor(this);
-    this.editor.setVal(LS.texts.scriptTemplate);
+    this.editor.val = LS.texts.scriptTemplate;
     this.start = new Form.ButtonConfirm(this, LS.labels.sandbox.buttons.start);
 
     this.aels();
@@ -19,7 +19,7 @@ class Sandbox extends Page{
 
   aels(){
     this.start.on('click', () => {
-      const src = this.editor.getVal();
+      const src = this.editor.val;
       let func = null;
 
       try{ func = new Function(src); }

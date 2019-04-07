@@ -5,6 +5,7 @@ const path = require('path');
 const http = require('http');
 const O = require('../../omikron');
 const Server = require('../server');
+const Captcha = require('../data/captcha');
 
 const SIMULATE_SLOW_CONNECTION = 0;
 const DELAY_RESPONSE = 100;
@@ -66,25 +67,39 @@ class HTTPServer extends Server{
       throw new Error(info);
     };
 
-    const url = req.url.replace(/[\?\#].*/s, '');
+    const e404 = () => err(404);
+
+    const {url} = req;
+    const pth = url.replace(/^\/|[\?\#].*/gs, '') || '/';
 
     let errHandled = 0;
 
     try{
-      if(/^\/?(?:omikron|framework)\.js$/.test(url))
+      if(/^(?:omikron|framework)\.js$/.test(pth))
         return send(O.dirs.omikron);
 
+      if(pth === 'captcha'){
+        const match = url.match(/[\?\&]token=([^\&]*)/);
+        if(match === null) e404();
+
+        const token = match[1];
+        const captcha = Captcha.get(token);
+        if(captcha === null) e404();
+
+        return send(captcha.file);
+      }
+
       if(
-        !/^[a-z0-9\-\.\/]+$/i.test(url) ||
-        /^\.|\.$|\.{2}/.test(url)
+        !/^[a-z0-9\-\.\/]+$/i.test(pth) ||
+        /^\.|\.$|\.{2}/.test(pth)
       ) err(400, 'invalidURL');
 
       const check = (en=entry) => {
         if(!fs.existsSync(en))
-          err(404);
+          e404();
       };
 
-      let entry = path.join(wwwDir, url);
+      let entry = path.join(wwwDir, pth);
       check(entry);
 
       const stat = fs.statSync(entry);
@@ -101,7 +116,6 @@ class HTTPServer extends Server{
     }catch(e){
       err(500, String(e));
     }
-
   }
 };
 

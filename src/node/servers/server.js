@@ -10,7 +10,7 @@ class Server{
   }
 
   static name(){ O.virtual('name'); }
-  name(){ this.constructor.name(); }
+  name(){ return this.constructor.name(); }
 
   start(){ O.virtual('start'); }
   close(){ O.virtual('close'); }

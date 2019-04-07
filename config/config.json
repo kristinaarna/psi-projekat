@@ -1,0 +1,21 @@
+{
+  "exe": {
+    "node": "C:/Program Files/nodejs/node.exe",
+    "electron": "%userprofile%/AppData/Roaming/npm/node_modules/electron/dist/electron.exe",
+    "php": "C:/wamp/bin/php/php7.2.4/php.exe",
+    "mysql": "C:/wamp/bin/mysql/mysql5.7.21/bin/mysql.exe",
+    "python": "%userprofile%/AppData/Local/Programs/Python/Python37/python.exe",
+    "ffmpeg": "C:/Program Files/Ffmpeg/bin/original/ffmpeg.exe"
+  },
+
+  "dirs": {
+    "captchas": "captchas"
+  },
+
+  "files": {
+    "dbInit": "db-init.txt"
+  },
+
+  "isTravis": null,
+  "dbName": "psi-projekat"
+}

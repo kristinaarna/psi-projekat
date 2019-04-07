@@ -10,8 +10,7 @@ class CompetitionTitle extends Element.Span{
     this.val = title;
   }
 
-  getVal(){ return this.val; }
-
+  get val(){ return this.val; }
   css(){ return 'competition-title'; }
 };
 

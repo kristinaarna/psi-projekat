@@ -1,23 +1,21 @@
 'use strict';
 
-class SessionStorage extends O.Storage{
-  constructor(){
-    super(O.sst);
-  }
+const EnhancedStorage = require('./enhanced-storage');
 
-  static get version(){ return 0; }
+const keys = [];
+
+class SessionStorage extends EnhancedStorage{
+  constructor(){
+    super(O.sst, O.project, keys);
+  }
 
   init(){
     const state = O.obj();
     this.state = state;
-
-    state.signedIn = 0;
   }
 
   ser(ser=new O.Serializer()){
     const {state} = this;
-
-    ser.write(state.signedIn);
 
     return ser;
   }
@@ -26,13 +24,8 @@ class SessionStorage extends O.Storage{
     const state = O.obj();
     this.state = state;
 
-    state.signedIn = ser.read();
-
     return this;
   }
-
-  get signedIn(){ return this.state.signedIn; }
-  set signedIn(val){ this.state.signedIn = val; this.save(); }
 };
 
 module.exports = SessionStorage;

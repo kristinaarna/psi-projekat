@@ -7,7 +7,7 @@ const O = require('../../omikron');
 const Server = require('../server');
 const methods = require('./methods');
 
-class PHPServer extends Server{
+class DataServer extends Server{
   constructor(port){
     super(port);
 
@@ -15,7 +15,7 @@ class PHPServer extends Server{
     this.server = http.createServer(onReq);
   }
 
-  static name(){ return 'php'; }
+  static name(){ return 'data'; }
 
   start(){
     this.server.listen(this.port);
@@ -28,6 +28,15 @@ class PHPServer extends Server{
   onReq(req, res){
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'x-requested-with');
+
+    if(req.method !== 'POST'){
+      req.resume();
+      res.end(JSON.stringify({
+        data: null,
+        error: 'Request\'s method must be POST',
+      }));
+      return;
+    }
 
     const bufs = [];
 
@@ -47,7 +56,7 @@ class PHPServer extends Server{
   }
 };
 
-module.exports = PHPServer;
+module.exports = DataServer;
 
 async function processJson(json){
   const err = msg => {

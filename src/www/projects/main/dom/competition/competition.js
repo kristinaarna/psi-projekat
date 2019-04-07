@@ -34,15 +34,12 @@ class Competition extends Element.Region{
   }
 
   updateBtn(){
-    this.btn.setVal(
-      this.applied ?
+    this.btn.val = this.applied ?
       LS.labels.competition.giveUp :
-      LS.labels.competition.apply
-    );
+      LS.labels.competition.apply;
   }
 
-  getTitle(){ return this.title.getVal(); }
-
+  getTitle(){ return this.title.val; }
   css(){ return 'post'; }
 };
 

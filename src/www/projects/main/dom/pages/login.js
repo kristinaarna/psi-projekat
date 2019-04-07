@@ -12,15 +12,15 @@ class Login extends Page{
     const form = new Form(this);
 
     const fields = [
-      ['InputText', 'username'],
-      ['InputPass', 'pass'],
+      ['InputText', 'nick', 'username'],
+      ['InputPass', 'pass', 'pass'],
     ];
 
-    this.fields = fields.map(([ctorName, labelName]) => {
+    this.fields = fields.map(([ctorName, fieldName, labelName]) => {
       const ctor = Element[ctorName];
       const label = LS.labels.forms.fields[labelName];
 
-      form.createField(ctor, label);
+      form.createField(ctor, fieldName, label);
     });
 
     form.addConfirm();

@@ -303,3 +303,8 @@ body{
   margin-top: 8px;
   display: block;
 }
+
+.captcha{
+  display: inline-block;
+  margin: 10px;
+}

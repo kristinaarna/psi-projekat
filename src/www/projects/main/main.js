@@ -1,16 +1,7 @@
 'use strict';
 
-/*
-  Older versions of Google Chrome had issues with Math.random()
-  Ref: https://bugs.chromium.org/p/v8/issues/detail?id=8212
-  Function O.enhanceRNG() creates cryptographically secure
-  random number generator that depends on current time in
-  milliseconds and internal 256-bit state.
-*/
-O.enhanceRNG();
-
 // Constants
-const LOADING_DISPLAY = 1;
+const LOADING_DISPLAY = 0;
 const LOADING_TRESHOLD = LOADING_DISPLAY ? 1e-4 : 1;
 
 /*

@@ -3,11 +3,9 @@
   "engines": [
     {
       "name": "node",
-      "exe": "node",
       "ext": "js"
     }, {
       "name": "electron",
-      "exe": "electron",
       "script": "electron.js",
       "options": {
         "skipFirst": true,
@@ -15,7 +13,6 @@
       }
     }, {
       "name": "python",
-      "exe": "python",
       "ext": "py"
     }
   ]

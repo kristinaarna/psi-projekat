@@ -13,6 +13,7 @@ const server = require('./server');
 const methods = [
   'getHomePagePosts',
   'getCompetitions',
+  'getCaptcha',
 ];
 
 module.exports = initMethods(methods);

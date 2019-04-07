@@ -2176,7 +2176,15 @@ class Storage extends Serializable{
 
     const str = storage[prop];
     const buf = O.Buffer.from(str, this.encoding);
-    const ser = new O.Serializer(buf, this.checksum);
+
+    let ser;
+    try{
+      ser = new O.Serializer(buf, this.checksum);
+    }catch{
+      this.init();
+      this.save();
+      ser = this.getSer();
+    }
 
     return ser;
   }
@@ -2188,7 +2196,7 @@ class Storage extends Serializable{
     const ser = this.getSer();
     const ver = ser.readInt();
 
-    return ver === this.version;
+    return this.constructor.name, ver === this.version;
   }
 
   load(){
@@ -2253,6 +2261,12 @@ const O = {
 
   glob: null,
 
+  // Symbols
+
+  symbols: {
+    enhanceRNG: Symbol('enhanceRNG'),
+  },
+
   // Classes
 
   Vector,
@@ -2291,11 +2305,13 @@ const O = {
       if(CHROME_ONLY && global.navigator.vendor !== 'Google Inc.')
         return O.error('Please use Chrome.');
 
-      O.lst = window.localStorage;
-      O.sst = window.sessionStorage;
+      if(!isElectron){
+        O.lst = window.localStorage;
+        O.sst = window.sessionStorage;
+      }
     }
 
-    if(isNode){
+    if(isNode || isElectron){
       O.initNodeModules();
       O.Buffer = global.Buffer;
     }
@@ -2304,6 +2320,15 @@ const O = {
       O.overrideConsole();
 
     O.module.cache = O.obj();
+
+    /*
+      Older versions of Google Chrome had issues with Math.random()
+      Ref: https://bugs.chromium.org/p/v8/issues/detail?id=8212
+      Function O.enhanceRNG creates cryptographically secure
+      random number generator that depends on current time in
+      milliseconds and internal 256-bit state.
+    */
+    O.enhanceRNG(O.symbols.enhanceRNG);
 
     if(loadProject){
       O.project = 'main';
@@ -2349,8 +2374,7 @@ const O = {
   },
 
   overrideConsole(){
-    var global = O.global;
-    var isNode = O.isNode;
+    const {global, isNode, isElectron} = O;
 
     var console = global.console;
     var logOrig = console.log;
@@ -2363,7 +2387,7 @@ const O = {
         return;
       }
 
-      if(isNode){
+      if(isNode || isElectron){
         var indentStr = ' '.repeat(indent << 1);
         var str = O.inspect(args);
 
@@ -2401,8 +2425,8 @@ const O = {
   },
 
   inspect(arr){
-    if(!O.isNode)
-      throw new TypeError('Function "inspect" is available only in Node.js');
+    if(!(O.isNode || O.isElectron))
+      throw new TypeError('Function "inspect" is available only in Node.js and Electron');
 
     const {util} = O.nm;
     const fstStr = typeof arr[0] === 'string';
@@ -2601,7 +2625,7 @@ const O = {
 
   urlTime(url){
     var char = url.indexOf('?') !== -1 ? '&' : '?';
-    return `${url}${char}_=${Date.now()}`;
+    return `${url}${char}_=${O.now()}`;
   },
 
   rf(file, isBinary, cb=null){
@@ -2802,7 +2826,16 @@ const O = {
     return `${str[0].toUpperCase()}${str.substring(1)}`;
   },
 
+  chars(start, len){
+    const cc = O.cc(start);
+    return O.ca(len, i => O.sfcc(cc + i)).join('');
+  },
+
   indent(str, indent){ return `${' '.repeat(indent << 1)}${str}`; },
+  setLineBreak(str, lineBreak){ return str.replace(/\r\n|\r|\n/g, lineBreak); },
+  cr(str){ return O.setLineBreak(str, '\r'); },
+  lf(str){ return O.setLineBreak(str, '\n'); },
+  crlf(str){ return O.setLineBreak(str, '\r\n'); },
 
   /*
     Array functions
@@ -2874,7 +2907,10 @@ const O = {
     Random number generator
   */
 
-  enhanceRNG(){
+  enhanceRNG(sym){
+    if(sym !== O.symbols.enhanceRNG)
+      throw new TypeError('Function "enhanceRNG" should not be called explicitly');
+
     O.enhancedRNG = 1;
     O.randState = O.Buffer.from(O.ca(32, () => Math.random() * 256));
     O.repeat(10, () => O.random());
@@ -2896,7 +2932,7 @@ const O = {
     if(O.rseed !== null){
       write(O.rseed);
     }else{
-      write(Date.now());
+      write(O.now());
       write(Math.random() * 2 ** 64);
     }
 
@@ -2961,8 +2997,8 @@ const O = {
   },
 
   sleep(time){
-    const t = Date.now();
-    while(Date.now() - t < time);
+    const t = O.now();
+    while(O.now() - t < time);
   },
 
   sleepa(time){
@@ -3108,6 +3144,8 @@ const O = {
   rev(str){ return str.split('').reverse().join(''); },
   has(obj, key){ return Object.hasOwnProperty.call(obj, key); },
   desc(obj, key){ return Object.getOwnPropertyDescriptor.call(obj, key); },
+  now(){ return Date.now(); },
+  gmt(){ return new Date().toGMTString(); },
 
   /*
     Node functions
@@ -3172,7 +3210,7 @@ const O = {
     return sha256;
 
     function sha256(data){
-      if(O.isNode && O.fastSha256){
+      if((O.isNode || O.isElectron) && O.fastSha256){
         var hash = O.nm.crypto.createHash('sha256');
         hash.update(data);
         return hash.digest();

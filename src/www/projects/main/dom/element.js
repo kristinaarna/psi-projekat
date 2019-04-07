@@ -50,10 +50,10 @@ class Element extends O.EventEmitter{
 
   get children(){ return Array.from(this.elem.children); }
   get style(){ return this.elem.style; }
+  get val(){ return this.elem.textContent; }
+  set val(val){ this.elem.textContent = val; }
 
   focus(){ return this.elem.focus(); }
-  getVal(){ return this.elem.textContent; }
-  setVal(text){ this.elem.textContent = text; }
   br(num){ return O.ceBr(this.elem, num); }
   getTag(){ return this.tag(); }
 
@@ -89,7 +89,7 @@ class Right extends Div{
 class Text extends Element{
   constructor(parent, text=''){
     super(parent);
-    this.setVal(text);
+    this.val = text;
   }
 
   css(){ return 'text'; }
@@ -100,43 +100,41 @@ class Span extends Text{
 };
 
 class Input extends Element{
-  constructor(parent, placeholder=null){
+  constructor(parent, name=null, placeholder=null){
     super(parent);
 
-    if(placeholder !== null)
-      this.elem.placeholder = placeholder;
+    this.name = name;
+    this.placeholder = placeholder;
+
+    if(name !== null) this.elem.name = name;
+    if(placeholder !== null) this.elem.placeholder = placeholder;
   }
 
-  getVal(){
-    return this.elem.value;
-  }
-
-  setVal(val){
-    this.elem.value = val;
-  }
+  get val(){ return this.elem.value; }
+  set val(val){ this.elem.value = val; }
 
   tag(){ return 'input'; }
   css(){ return 'input'; }
 };
 
 class InputText extends Input{
-  constructor(parent, placeholder){
-    super(parent, placeholder);
+  constructor(parent, name, placeholder){
+    super(parent, name, placeholder);
     this.elem.type = 'text';
   }
 };
 
 class InputPass extends Input{
-  constructor(parent, placeholder){
-    super(parent, placeholder);
+  constructor(parent, name, placeholder){
+    super(parent, name, placeholder);
     this.elem.type = 'password';
   }
 };
 
 class InputTextarea extends Input{
-  constructor(parent, placeholder, val=''){
-    super(parent, placeholder);
-    this.setVal(val);
+  constructor(parent, name, placeholder, val=''){
+    super(parent, name, placeholder);
+    this.val = val;
   }
 
   tag(){ return 'textarea'; }
@@ -144,20 +142,15 @@ class InputTextarea extends Input{
 };
 
 class InputDropdown extends Input{
-  constructor(parent, opts=[], selected=null){
-    super(parent);
+  constructor(parent, name, opts=[], selected=null){
+    super(parent, name);
 
     for(const [label, desc] of opts)
       this.addOpt(label, desc, label === selected);
   }
 
-  getVal(){
-    O.noimpl('getVal');
-  }
-
-  setVal(val){
-    O.noimpl('setVal');
-  }
+  get val(){ O.noimpl('val (getter)'); }
+  set val(val){ O.noimpl('val (setter)'); }
 
   addOpt(label, desc, selected=0){
     const opt = O.ce(this.elem, 'option');
@@ -221,6 +214,18 @@ class Button extends Span{
   css(){ return 'btn'; }
 };
 
+class Image extends Element{
+  constructor(parent, src){
+    super(parent);
+    this.elem.src = src;
+  }
+
+  get src(){ return this.elem.src; }
+  set src(val){ this.elem.src = val; }
+
+  tag(){ return 'img'; }
+};
+
 Element.Div = Div;
 Element.Left = Left;
 Element.Right = Right;
@@ -237,5 +242,6 @@ Element.Title = Title;
 Element.Rectangle = Rectangle;
 Element.Region = Region;
 Element.Button = Button;
+Element.Image = Image;
 
 module.exports = Element;
