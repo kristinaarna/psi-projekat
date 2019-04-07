@@ -40,7 +40,21 @@ class Register extends Page{
     });
 
     form.on('confirm', fields => {
-      dom.noimpl();
+      const {nick, email, pass, pass2, captchaToken, captchaStr} = fields;
+      const {dom} = O.glob;
+
+      const errs = LS.errors.query;
+      if(pass2 !== pass) return dom.alert(errs.passNotMatch);
+
+      backend.register(nick, email, pass, captchaToken, captchaStr).then(data => {
+        dom.alert('OK');
+      }, err => {
+        form.newCaptcha();
+        form.fields.captchaStr.val = '';
+
+        if(O.has(errs, err)) err = errs[err];
+        dom.alert(err);
+      });
     });
 
     form.addCaptcha().then(() => {

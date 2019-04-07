@@ -14,6 +14,7 @@ const methods = [
   'getHomePagePosts',
   'getCompetitions',
   'getCaptcha',
+  'register',
 ];
 
 module.exports = initMethods(methods);
