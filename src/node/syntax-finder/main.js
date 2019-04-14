@@ -6,7 +6,7 @@ const O = require('../omikron');
 const finder = require('./finder');
 const skipList = require('./skip-list');
 
-const strToFind = process.argv[3].toLowerCase();
+const strToFind = process.argv[2].toLowerCase();
 
 const cwd = __dirname;
 const mainDir = path.join(cwd, '../../..');
@@ -37,12 +37,8 @@ setTimeout(main);
 function main(){
   const output = finder.find(dirs, textExts, func);
 
-  if(output.length === 0){
-    log('No matches found');
-    return;
-  }
-
-  log(output.join('\n'));
+  if(output.length !== 0)
+    log(output.join('\n'));
 }
 
 function func(file, src){

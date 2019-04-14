@@ -308,3 +308,19 @@ body{
   display: inline-block;
   margin: 10px;
 }
+
+.user-profile-avatar{
+  display: block;
+  width: 100%;
+  margin: 10px 0px;
+  text-align: center;
+}
+
+.user-profile-avatar-img{
+  display: inline-block;
+}
+
+.user-profile-label{
+  display: block;
+  font-weight: bold;
+}

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const O = require('../../omikron');
+const config = require('../../config');
 const Server = require('../server');
 const Captcha = require('../data/captcha');
 
@@ -87,6 +88,20 @@ class HTTPServer extends Server{
         if(captcha === null) e404();
 
         return send(captcha.file);
+      }
+
+      if(pth === 'avatar'){
+        const match = url.match(/[\?\&]nick=([^\&]*)/);
+        if(match === null) e404();
+
+        const nick = match[1];
+        if(!/^[a-z\-]+$/.test(nick)) e404();
+
+        const dir = config.dirs.avatars;
+        let file = path.join(dir, `${nick}.png`);
+        if(!fs.existsSync(file)) file = path.join(dir, `${config.defaultAvatar}.png`);
+
+        return send(file);
       }
 
       if(

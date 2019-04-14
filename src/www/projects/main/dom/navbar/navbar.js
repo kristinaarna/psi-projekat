@@ -18,8 +18,8 @@ class Navbar extends Element.Div{
         ['language', 'language'],
       ],
       right: O.lst.signedIn ? [
-        ['signOut', 'signOut'],
-        ['profile', 'profile'],
+        ['logout', null],
+        ['profile', `users/${O.lst.nick}`],
       ] : [
         ['register', 'register'],
         ['login', 'login'],

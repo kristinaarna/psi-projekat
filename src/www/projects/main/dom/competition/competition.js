@@ -8,29 +8,32 @@ const CompetitionDate = require('./date');
 const CompetitionDescription = require('./desc');
 
 class Competition extends Element.Region{
-  constructor(parent, title, date, desc, applied=0){
+  constructor(parent, id, title, date, desc, applied){
     super(parent);
 
+    this.id = id;
     this.title = new CompetitionTitle(this, title);
     this.date = new CompetitionDate(this, date);
     this.desc = new CompetitionDescription(this, desc);
 
     this.applied = applied;
 
-    this.right = new Element.Right(this);
-    this.btn = new Form.ButtonConfirm(this.right);
-    this.updateBtn();
+    if(O.lst.signedIn){
+      this.right = new Element.Right(this);
+      this.btn = new Form.ButtonConfirm(this.right);
+      this.updateBtn();
 
-    this.btn.on('click', this.onClick.bind(this));
+      this.btn.on('click', this.onClick.bind(this));
+    }
   }
 
   onClick(){
-    this.applied ^= 1;
-    this.updateBtn();
+    this.emit('stateChange', this.applied ^ 1, ok => {
+      if(!ok) return;
 
-    this.emit('stateChange', this.applied);
-    if(this.applied) this.emit('apply');
-    else this.emit('giveUp');
+      this.applied ^= 1;
+      this.updateBtn();
+    });
   }
 
   updateBtn(){
@@ -39,7 +42,7 @@ class Competition extends Element.Region{
       LS.labels.competition.apply;
   }
 
-  getTitle(){ return this.title.val; }
+  getTitle(){ return this.title.title; }
   css(){ return 'post'; }
 };
 

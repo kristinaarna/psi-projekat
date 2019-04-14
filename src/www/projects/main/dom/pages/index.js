@@ -9,6 +9,7 @@ const Help = require('./help');
 const Language = require('./language');
 const Register = require('./register');
 const Login = require('./login');
+const UserProfile = require('./user-profile');
 const Error = require('./error');
 
 module.exports = {
@@ -21,5 +22,6 @@ module.exports = {
   Language,
   Register,
   Login,
+  UserProfile,
   Error,
 };

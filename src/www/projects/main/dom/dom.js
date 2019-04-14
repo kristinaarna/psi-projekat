@@ -111,6 +111,7 @@ class DOM extends Element{
   }
 
   alert(msg, cb){
+    if(typeof msg !== 'string') msg = O.sf(msg);
     const modal = new modals.Alert(this.modalInner, msg);
     this.openModal(cb);
   }
@@ -119,12 +120,39 @@ class DOM extends Element{
     this.alert(LS.errors.noimpl, cb);
   }
 
+  succ(msg, cb){
+    this.alert(LS.succ.query[msg], cb);
+  }
+
+  err(err, cb){
+    const errs = LS.errors.query;
+
+    if(err instanceof Error) err = err.message;
+    else if(typeof err === 'string' && O.has(errs, err)) err = errs[err];
+
+    this.alert(err, cb);
+  }
+
   createNavbar(){
     const navbar = new Navbar(this.main);
     this.navbar = navbar;
 
     navbar.on('click', (name, elem, evt) => {
-      this.navigate(elem.path);
+      if(elem.path !== null)
+        return this.nav(elem.path);
+
+      switch(name){
+        case 'logout':
+          const {token} = O.lst;
+          O.lst.token = null;
+
+          backend.logout(token).then(() => {
+            location.reload();
+          }, err => {
+            this.err(err, () => location.reload());
+          });
+          break;
+      }
     });
   }
 
@@ -132,7 +160,7 @@ class DOM extends Element{
     this.pageContent = new PageContent(this.main);
   }
 
-  navigate(path){
+  nav(path){
     const url = path !== '' ? `/?path=${path}` : '/';
     history.pushState(null, path, url);
     this.reload();
@@ -157,61 +185,66 @@ class DOM extends Element{
       return;
     }
 
-    if(len === 1){
-      switch(path[0]){
-        case 'sandbox':
-          await this.createSandboxPage();
-          break;
+    switch(path[0]){
+      case 'sandbox':
+        if(len !== 1) return await e404();
+        await this.createSandboxPage();
+        break;
 
-        case 'competition':
-          await this.createCompetitionPage();
-          break;
+      case 'competition':
+        if(len !== 1) return await e404();
+        await this.createCompetitionPage();
+        break;
 
-        case 'search':
-          await this.createSearchPage();
-          break;
+      case 'search':
+        if(len !== 1) return await e404();
+        await this.createSearchPage();
+        break;
 
-        case 'help':
-          await this.createHelpPage();
-          break;
+      case 'help':
+        if(len !== 1) return await e404();
+        await this.createHelpPage();
+        break;
 
-        case 'language':
-          await this.createLanguagePage();
-          break;
+      case 'language':
+        if(len !== 1) return await e404();
+        await this.createLanguagePage();
+        break;
 
-        case 'register':
-          await this.createRegisterPage();
-          break;
+      case 'register':
+        if(len !== 1) return await e404();
+        await this.createRegisterPage();
+        break;
 
-        case 'login':
-          await this.createLoginPage();
-          break;
+      case 'login':
+        if(len !== 1) return await e404();
+        await this.createLoginPage();
+        break;
 
-        case 'error':
-          const status = O.urlParam('status');
-          const info = O.urlParam('info');
-          await this.createError(status, info);
-          break;
+      case 'users':
+        if(len !== 2) return await e404();
+        await this.createUserProfilePage(path[1]);
+        break;
 
-        default: await e404(); break;
-      }
-      return;
+      case 'error':
+        if(len !== 1) return await e404();
+        const status = O.urlParam('status');
+        const info = O.urlParam('info');
+        await this.createError(status, info);
+        break;
+
+      default: await e404(); break;
     }
-
-    await e404();
   }
 
   async createHomePage(){
     const page = new pages.Home(this.pageContent);
     this.page = page;
 
-    const posts = await backend.getHomePagePosts();
+    const posts = await backend.getPosts();
 
     for(const post of posts){
-      const user = post.user;
-      const date = new Date(+post.date);
-      const content = post.content;
-
+      const {user, date, content} = post;
       page.createPost(user, date, content);
     }
   }
@@ -225,24 +258,12 @@ class DOM extends Element{
     const page = new pages.CompetitionPage(this.pageContent);
     this.page = page;
 
-    const comps = await backend.getCompetitions(0);
+    const comps = await backend.getCompetitions(O.lst.token);
 
     for(const comp of comps){
-      const title = comp.title;
-      const date = new Date(+comp.date);
-      const desc = comp.desc;
-      const applied = comp.applied;
-
-      page.createCompetition(title, date, desc, applied);
+      const {id, title, date, desc, applied} = comp;
+      page.createCompetition(id, title, date, desc, applied);
     }
-
-    page.on('stateChange', (comp, applied) => {
-      this.alert(`${
-        applied ?
-        LS.labels.competition.msgs.applied :
-        LS.labels.competition.msgs.gaveUp
-      } ${O.sf(comp.getTitle())}`);
-    });
   }
 
   async createSearchPage(){
@@ -267,6 +288,25 @@ class DOM extends Element{
 
   async createLoginPage(){
     const page = new pages.Login(this.pageContent);
+    this.page = page;
+  }
+
+  async createUserProfilePage(nick){
+    let data = null;
+
+    try{
+      data = await backend.getUserData(nick);
+    }catch(err){
+      if(err === '404') this.createError(404);
+      else this.err(err);
+      return;
+    }
+
+    data.nick = nick;
+    data.registrationDate = O.date(data.registrationDate);
+    data.isMod = LS.bool[data.isMod];
+
+    const page = new pages.UserProfile(this.pageContent, data);
     this.page = page;
   }
 

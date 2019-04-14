@@ -5,7 +5,7 @@ const Element = require('../element');
 
 class PostDate extends Element.Span{
   constructor(parent, date){
-    const str = date.toGMTString();
+    const str = O.date(date);
     super(parent, str);
   }
 

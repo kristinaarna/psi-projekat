@@ -13,17 +13,17 @@ class Search extends Page{
     const field = form.createField(Element.InputDropdown);
 
     const searchTypes = [
-      ['user', 'users'],
-      ['comp', 'competitions'],
-      ['func', 'functionalities'],
-      ['post', 'posts'],
+      ['funcs', 'functionalities'],
+      ['comps', 'competitions'],
+      ['posts', 'posts'],
+      ['users', 'users'],
     ];
 
     searchTypes.forEach(([type, label], i) => {
       field.addOpt(type, LS.labels.forms.fields[label], i === 0);
     });
 
-    form.createField(Element.InputText, LS.labels.forms.fields.keyWords);
+    form.createField(Element.InputText, 'keywords', LS.labels.forms.fields.keywords);
     form.addConfirm(LS.labels.forms.buttons.search);
 
     form.on('confirm', () => {

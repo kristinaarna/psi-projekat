@@ -9,7 +9,8 @@
       "script": "electron.js",
       "options": {
         "skipFirst": true,
-        "killOnSigint": false
+        "killOnSigint": true,
+        "killCmd": "taskkill /f /im electron.exe"
       }
     }, {
       "name": "python",

@@ -6,6 +6,7 @@ const cp = require('child_process');
 const O = require('../omikron');
 const config = require('../config');
 const fsRec = require('../fs-rec');
+const defaultAvatar = require('../default-avatar');
 
 const DB_NAME = config.dbName;
 
@@ -37,8 +38,13 @@ async function main(){
   log('Adapting exported script');
   await adaptSQLScript();
 
-  log('Initializing database')
+  log('Initializing database');
   await initDB();
+
+  log('Generating default avatar');
+  await generateDefaultAvatar();
+
+  O.proc.exit();
 }
 
 function resetDataDir(){
@@ -53,7 +59,7 @@ function initSubdirs(){
 }
 
 function initializeDate(){
-  O.wfs(initDateFile, O.gmt());
+  O.wfs(initDateFile, O.date());
 }
 
 function adaptSQLScript(){
@@ -93,6 +99,13 @@ function initDB(){
 
     fs.createReadStream(dbInitFile).pipe(proc.stdin);
   });
+}
+
+async function generateDefaultAvatar(){
+  const file = `${config.defaultAvatar}.png`;
+  const pth = path.join(config.dirs.avatars, file);
+
+  await defaultAvatar.generate(config.avatarSize, pth);
 }
 
 function err(msg){

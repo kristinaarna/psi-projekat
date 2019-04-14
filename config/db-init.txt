@@ -1,77 +1,68 @@
-
-CREATE TABLE User
-(
+CREATE TABLE User (
   idUser               INTEGER NOT NULL AUTO_INCREMENT,
   nick                 VARCHAR(64) NOT NULL,
-  fullName             VARCHAR(64) NULL,
+  passHash             VARCHAR(1024) NULL,
+  email                VARCHAR(1024) NOT NULL,
+  displayEmail         BIT NOT NULL,
   isMod                BIT NOT NULL,
   token                VARCHAR(1024) NULL,
-  email                VARCHAR(1024) NOT NULL,
-  registrationDate     TIMESTAMP NULL,
+  registrationDate     BIGINT NOT NULL,
+  fullName             VARCHAR(64) NULL,
   description          text NULL,
-  displayEmail         BIT NULL,
-  passHash             VARCHAR(1024) NULL,
   PRIMARY KEY (idUser)
 );
 
-CREATE TABLE Post
-(
+CREATE TABLE Post (
   idPost               INTEGER NOT NULL AUTO_INCREMENT,
   postedBy             INTEGER NOT NULL,
   content              text NOT NULL,
-  creationDate         TIMESTAMP NOT NULL,
-  PRIMARY KEY (idPost,postedBy),
+  creationDate         BIGINT NOT NULL,
+  PRIMARY KEY (idPost, postedBy),
   FOREIGN KEY (postedBy) REFERENCES User (idUser)
 );
 
-CREATE TABLE Goal
-(
+CREATE TABLE Goal (
   idGoal               INTEGER NOT NULL AUTO_INCREMENT,
-  description          text NULL,
+  description          text NOT NULL,
   PRIMARY KEY (idGoal)
 );
 
-CREATE TABLE Competition
-(
+CREATE TABLE Competition (
   idComp               INTEGER NOT NULL AUTO_INCREMENT,
   createdBy            INTEGER NOT NULL,
+  title                VARCHAR(1024) NOT NULL,
+  description          text NOT NULL,
+  startDate            BIGINT NOT NULL,
+  endDate              BIGINT NOT NULL,
   idGoal               INTEGER NOT NULL,
-  description          text NULL,
-  startDate            TIMESTAMP NULL,
-  endDate              TIMESTAMP NULL,
-  maxUsers             INTEGER NULL,
-  points               INTEGER NULL,
-  PRIMARY KEY (idComp,createdBy,idGoal),
+  maxUsers             INTEGER NOT NULL,
+  points               INTEGER NOT NULL,
+  PRIMARY KEY (idComp, createdBy, idGoal),
   FOREIGN KEY (createdBy) REFERENCES User (idUser),
   FOREIGN KEY (idGoal) REFERENCES Goal (idGoal)
 );
 
-CREATE TABLE Participating
-(
-  user                 INTEGER NOT NULL AUTO_INCREMENT,
+CREATE TABLE Participating (
+  user                 INTEGER NOT NULL,
   comp                 INTEGER NOT NULL,
-  createdBy            INTEGER NOT NULL,
-  idGoal               INTEGER NOT NULL,
-  applicationDate      TIMESTAMP NULL,
-  PRIMARY KEY (user,comp,createdBy,idGoal),
+  applicationDate      BIGINT NOT NULL,
+  PRIMARY KEY (user, comp),
   FOREIGN KEY (user) REFERENCES User (idUser),
-  FOREIGN KEY (comp, createdBy, idGoal) REFERENCES Competition (idComp, createdBy, idGoal)
+  FOREIGN KEY (comp) REFERENCES Competition (idComp)
 );
 
-CREATE TABLE Functionality
-(
+CREATE TABLE Functionality (
   idFunc               INTEGER NOT NULL AUTO_INCREMENT,
   idUser               INTEGER NOT NULL,
   description          VARCHAR(1024) NULL,
-  PRIMARY KEY (idFunc,idUser),
+  PRIMARY KEY (idFunc, idUser),
   FOREIGN KEY (idUser) REFERENCES User (idUser)
 );
 
-CREATE TABLE Avatar
-(
-  idAvatar             INTEGER NOT NULL AUTO_INCREMENT,
-  belongsTo            INTEGER NOT NULL,
-  file                 VARCHAR(1024) NULL,
-  PRIMARY KEY (idAvatar,belongsTo),
-  FOREIGN KEY (belongsTo) REFERENCES User (idUser)
+CREATE TABLE Upgrade (
+  user               INTEGER NOT NULL,
+  func               INTEGER NOT NULL,
+  PRIMARY KEY (user, func),
+  FOREIGN KEY (user) REFERENCES User (idUser),
+  FOREIGN KEY (func) REFERENCES Functionality (idFunc)
 );

@@ -1,8 +1,10 @@
 <?php
   abstract class Query{
     private static $args;
+    protected $date;
 
     protected function __construct(){
+      $this->date = (int)(microtime(true) * 1e3);
       $this->query($this->getPDO(), Query::$args);
     }
 
@@ -24,8 +26,12 @@
       $pass = '';
       $dbName = 'psi-projekat';
 
-      $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbName, $user, $pass);
-      $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbName, $user, $pass, array(
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_STRINGIFY_FETCHES => false,
+      ));
 
       return $pdo;
     }

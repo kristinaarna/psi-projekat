@@ -7,16 +7,16 @@ const php = require('../../php');
 const hash = require('../../hash');
 const Captcha = require('./captcha');
 const Token = require('./token');
+const check = require('./check');
 
 const methods = {
-  async getHomePagePosts(){
-    // Not implemented yet
-    return [];
+  async getPosts(){
+    return await php.exec('getPosts');
   },
 
   async getCompetitions(token){
-    // Not implemented yet
-    return [];
+    if(!check.tokenn(token)) throw 'data';
+    return await php.exec('getCompetitions', {token});
   },
 
   async getCaptcha(){
@@ -26,56 +26,9 @@ const methods = {
   },
 
   async register(nick, email, pass, captchaToken, captchaStr){
-    /*
-      Ensure that the nick name:
-        1. is a string
-        2. is not longer than 32 characters
-        3. consists of lower case letters or numebrs separated by optional hyphens
-      Valid examples:
-        a
-        5
-        xy
-        some-user
-        a-b-c-d
-    */
-    if(!isStr(nick) || nick.length > 32 || !/^[a-z0-9]+(?:\-[a-z0-9]+)*$/.test(nick))
-      throw 'invalidNick';
-
-    /*
-      Ensure that the email:
-        1. is a string
-        2. is not longer than 1024 characters
-        3. consists of lower case letters or numebrs separated by exactly one "@" symbol
-      Valid examples:
-        user@website
-        a.b.c@dd.ee
-        ...@x.y.z
-        ----@--
-    */
-    if(!isStr(email) || email.length > 1024 || !/^[a-z0-9\-\.]+\@[a-z0-9\-\.]+$/.test(email))
-      throw 'invalidEmail';
-
-    /*
-      Ensure that the password:
-        1. is a string
-        2. is not shorter than 8 characters
-        3. is not longer than 64 characters
-        4. consists of printable ASCII characters (including spaces)
-        5. has at least one lower case letter
-        6. has at least one upper case letter
-        7. has at least one digit
-      Valid examples:
-        abcdefX7
-        aaAA3333
-        2 + 3 x B
-    */
-    if(!isStr(pass) || pass.length < 8 || pass.length > 64 || (
-      /^[ ~]+$/.test(pass) && !(
-        /[a-z]/.test(pass) &&
-        /[A-Z]/.test(pass) &&
-        /[0-9]/.test(pass)
-      )
-    )) throw 'invalidPass';
+    if(!check.nick(nick)) throw 'invalidNick';
+    if(!check.email(email)) throw 'invalidEmail';
+    if(!check.pass(pass)) throw 'invalidPass';
 
     /*
       Check the captcha validity.
@@ -86,7 +39,7 @@ const methods = {
     */
     {
       const msg = 'invalidCaptcha';
-      if(!isStr(captchaToken)) throw msg;
+      if(check.nstr(captchaToken)) throw msg;
 
       const captcha = Captcha.get(captchaToken);
       if(captcha === null) throw msg;
@@ -105,18 +58,56 @@ const methods = {
       email,
       passHash: hash(pass, 'sha512').toString('base64'),
     });
+  },
 
-    /*
-      TODO: Registration was successfull, now we need to automatically
-      login the user and send the token, but since login is not implemented
-      yet, we only return the string "ok"
-    */
-    return 'ok';
+  async login(nick, pass){
+    if(check.nstr(nick) || check.nstr(pass)) throw 'data';
+
+    const token = Token.generate();
+    const data = await php.exec('login', {
+      nick,
+      passHash: hash(pass, 'sha512').toString('base64'),
+      token,
+    });
+
+    data.token = token;
+    return data;
+  },
+
+  async logout(token){
+    if(!check.token(token)) throw 'data';
+    await php.exec('logout', {token});
+  },
+
+  async getUserData(nick){
+    if(!check.nick(nick)) throw 'data';
+    return await php.exec('getUserData', {nick});
+  },
+
+  async applyForCompetition(token, idComp){
+    if(!check.token(token)) throw 'data';
+    if(!check.id(idComp)) throw 'data';
+    await php.exec('applyForCompetition', {token, idComp});
+  },
+
+  async giveUpFromCompetition(token, idComp){
+    if(!check.token(token)) throw 'data';
+    if(!check.id(idComp)) throw 'data';
+    await php.exec('giveUpFromCompetition', {token, idComp});
+  },
+
+  async addPost(token, content){
+    if(!check.token(token)) throw 'data';
+    if(!check.text(content)) throw 'data';
+    await php.exec('addPost', {token, content});
+  },
+
+  async addCompetition(token, title, desc){
+    if(!check.token(token)) throw 'data';
+    if(!check.sstr(title)) throw 'data';
+    if(!check.text(desc)) throw 'data';
+    await php.exec('addCompetition', {token, title, desc});
   },
 };
 
 module.exports = methods;
-
-function isStr(val){
-  return typeof val === 'string';
-}

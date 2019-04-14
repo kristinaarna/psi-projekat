@@ -7,10 +7,10 @@ class CompetitionTitle extends Element.Span{
   constructor(parent, title){
     const str = `${LS.labels.competition.title}: ${title}`;
     super(parent, str);
-    this.val = title;
+
+    this.title = title;
   }
 
-  get val(){ return this.val; }
   css(){ return 'competition-title'; }
 };
 

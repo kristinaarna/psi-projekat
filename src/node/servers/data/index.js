@@ -48,13 +48,13 @@ class DataServer extends Server{
 
       processJson(json).then(data => {
         res.end(JSON.stringify({data, error: null}));
-      }).catch(error => {
-        if(error instanceof Error){
-          log(error);
-          error = 'data';
+      }).catch(err => {
+        if(err instanceof Error){
+          log(err);
+          err = 'data';
         }
 
-        res.end(JSON.stringify({data: null, error}));
+        res.end(JSON.stringify({data: null, error: err}));
       });
     });
   }
@@ -63,9 +63,7 @@ class DataServer extends Server{
 module.exports = DataServer;
 
 async function processJson(json){
-  const err = msg => {
-    throw new Error(msg);
-  };
+  const err = msg => { throw msg; };
 
   let obj;
 

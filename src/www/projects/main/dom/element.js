@@ -151,9 +151,6 @@ class InputDropdown extends Input{
       this.addOpt(label, desc, label === selected);
   }
 
-  get val(){ O.noimpl('val (getter)'); }
-  set val(val){ O.noimpl('val (setter)'); }
-
   addOpt(label, desc, selected=0){
     const opt = O.ce(this.elem, 'option');
     opt.value = label;
@@ -167,8 +164,8 @@ class InputDropdown extends Input{
 
 class Link extends Text{
   constructor(parent, text, url='javascript:void(0)'){
-    super(parent);
-    this.href = url;
+    super(parent, text);
+    this.elem.href = url;
   }
 
   tag(){ return 'a'; }

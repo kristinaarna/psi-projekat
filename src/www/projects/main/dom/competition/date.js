@@ -5,7 +5,7 @@ const Element = require('../element');
 
 class CompetitionDate extends Element.Span{
   constructor(parent, date){
-    const str = `${LS.labels.competition.startTime}: ${date.toGMTString()}`;
+    const str = `${LS.labels.competition.startTime}: ${O.date(date)}`;
     super(parent, str);
   }
 

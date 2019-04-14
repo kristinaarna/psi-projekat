@@ -35,10 +35,25 @@ function getFramework(){
     console.error = (...args) => void ipc.send('error', args);
     console.logRaw = data => void ipc.send('logRaw', data);
 
+    let catched = 0;
+
     process.on('uncaughtException', err => {
-      if(err instanceof Error)
-        err = err.stack;
-      console.error(err);
+      if(catched) return;
+      catched = 1;
+
+      if(err === null){
+        err = O.ftext(`
+
+          === ERROR ===
+
+          An unexpected error has occured somewhere, but we
+          are unable to detect where exactly.
+        `);
+      }
+
+      log(err);
+
+      setTimeout(() => window.close(), 500);
     });
   }
 
@@ -62,7 +77,7 @@ function getFramework(){
 }
 
 function init(O){
-  O.proc = new Process(process);
+  O.proc = new Process(O, process);
 }
 
 function getReq(){

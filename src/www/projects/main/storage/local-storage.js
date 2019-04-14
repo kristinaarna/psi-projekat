@@ -4,6 +4,8 @@ const EnhancedStorage = require('./enhanced-storage');
 
 const keys = [
   'token',
+  'nick',
+  'isMod',
 ];
 
 class LocalStorage extends EnhancedStorage{
@@ -12,18 +14,23 @@ class LocalStorage extends EnhancedStorage{
   }
 
   init(){
-    const state = O.obj();
-    this.state = state;
+    const state = this.state = O.obj();
 
     state.token = null;
+    state.nick = null;
+    state.isMod = null;
+
+    return this;
   }
 
   ser(ser=new O.Serializer()){
     const {state} = this;
 
-    if(state.token){
+    if(state.token !== null){
       ser.write(1);
-      ser.writeBuf(state.token);
+      ser.writeStr(state.token);
+      ser.writeStr(state.nick);
+      ser.write(state.isMod);
     }else{
       ser.write(0);
     }
@@ -32,10 +39,13 @@ class LocalStorage extends EnhancedStorage{
   }
 
   deser(ser){
-    const state = O.obj();
-    this.state = state;
+    const {state} = this.init();
 
-    state.token = ser.read() ? ser.readBuf() : null;
+    if(ser.read()){
+      state.token = ser.readStr();
+      state.nick = ser.readStr();
+      state.isMod = ser.read();
+    }
 
     return this;
   }

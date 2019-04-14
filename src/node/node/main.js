@@ -191,12 +191,12 @@ function onInput(str){
 }
 
 function spawnProc(name, args=[], options=O.obj(), opts=O.obj()){
-  opts = {
+  opts = Object.assign({
     skipFirst: 0,
     killOnSigint: 0,
+    killCmd: null,
     ignore: 0,
-    ...opts,
-  };
+  }, opts);
 
   const proc = cp.spawn(name, args, {
     cwd: currDir,
@@ -204,7 +204,7 @@ function spawnProc(name, args=[], options=O.obj(), opts=O.obj()){
   });
 
   var first = 1;
-  var sentSigint = 0;
+  var sigintSent = 0;
 
   var onData = data => write(data);
   var onEnd = () => proc.stdin.end();
@@ -250,12 +250,13 @@ function spawnProc(name, args=[], options=O.obj(), opts=O.obj()){
     if(DISPLAY_SIGINT)
       logSync('^C');
 
-    if(opts.ignore || opts.killOnSigint || (sentSigint && KILL_ON_SECOND_SIGINT)){
-      proc.kill();
+    if(opts.ignore || opts.killOnSigint || (sigintSent && KILL_ON_SECOND_SIGINT)){
+      if(opts.killCmd === null) proc.kill();
+      else cp.exec(opts.killCmd);
       return;
     }
 
-    sentSigint = 1;
+    sigintSent = 1;
     write(sigintBuf);
   }
 

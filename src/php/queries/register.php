@@ -1,25 +1,28 @@
 <?php
   class Register extends Query{
     public function query($pdo, $args){
-      $sth = $pdo->prepare('
+      $st = $pdo->prepare('
         select count(*) from User
         where nick = ?
       ');
-      $sth->execute([$args->nick]);
-      $num = (int)$sth->fetchColumn();
+      $st->execute([$args->nick]);
+      $num = $st->fetchColumn();
 
       if($num === 0){
         $pdo->prepare('
           insert into User (
             nick,
-            email,
             passHash,
-            isMod
-          ) values (?, ?, ?, false)
+            email,
+            displayEmail,
+            isMod,
+            registrationDate
+          ) values (?, ?, ?, false, false, ?)
         ')->execute([
           $args->nick,
-          $args->email,
           $args->passHash,
+          $args->email,
+          $this->date,
         ]);
 
         $this->succ();

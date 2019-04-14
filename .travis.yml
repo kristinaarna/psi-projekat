@@ -4,7 +4,6 @@ before_script:
   - nvm install 11
   - phpenv global 7.0
   - sudo service mysql start || true
-  - node src init
 
 script:
   - node src test

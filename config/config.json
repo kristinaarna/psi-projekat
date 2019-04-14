@@ -9,13 +9,17 @@
   },
 
   "dirs": {
-    "captchas": "captchas"
+    "captchas": "captchas",
+    "avatars": "avatars"
   },
 
   "files": {
     "dbInit": "db-init.txt"
   },
 
-  "isTravis": null,
-  "dbName": "psi-projekat"
+  "dbName": "psi-projekat",
+  "avatarSize": 400,
+  "defaultAvatar": "[default]",
+
+  "isTravis": null
 }
