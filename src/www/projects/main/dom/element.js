@@ -31,9 +31,7 @@ class Element extends O.EventEmitter{
   // Add event listener wrapper
   ael(type, func){
     O.ael(this.elem, type, evt => {
-      evt.preventDefault();
-      evt.stopPropagation();
-
+      O.pd(evt);
       func(evt);
     });
   }
@@ -162,6 +160,15 @@ class InputDropdown extends Input{
   css(){ return 'dropdown'; }
 };
 
+class InputFile extends Input{
+  constructor(parent, name){
+    super(parent, name);
+    this.elem.type = 'file';
+  }
+
+  css(){ return 'input-file'; }
+};
+
 class Link extends Text{
   constructor(parent, text, url='javascript:void(0)'){
     super(parent, text);
@@ -235,6 +242,7 @@ Element.InputText = InputText;
 Element.InputPass = InputPass;
 Element.InputTextarea = InputTextarea;
 Element.InputDropdown = InputDropdown;
+Element.InputFile = InputFile;
 Element.Link = Link;
 Element.Heading = Heading;
 Element.Title = Title;

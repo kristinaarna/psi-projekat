@@ -16,8 +16,9 @@
             email,
             displayEmail,
             isMod,
-            registrationDate
-          ) values (?, ?, ?, false, false, ?)
+            registrationDate,
+            points
+          ) values (?, ?, ?, false, false, ?, 0)
         ')->execute([
           $args->nick,
           $args->passHash,

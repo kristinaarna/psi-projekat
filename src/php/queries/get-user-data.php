@@ -13,15 +13,15 @@
         return;
       }
 
-      $id = (int)$id;
       $st = $pdo->prepare('
         select
-          if(U.displayEmail = 1, email, null) as email,
+          if(displayEmail = 1, email, null) as email,
           isMod,
           registrationDate,
+          points,
           fullName,
           description
-        from User U
+        from User
         where idUser = ?
       ');
       $st->execute([$id]);

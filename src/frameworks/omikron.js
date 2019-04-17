@@ -893,7 +893,7 @@ class Map2D{
 };
 
 class Map3D{
-  constructor(x=null, y=null, z = null, val=1){
+  constructor(x=null, y=null, z=null, val=1){
     this.d = O.obj();
 
     if(x !== null)
@@ -2246,6 +2246,7 @@ const O = {
   pi: Math.PI,
   pi2: Math.PI * 2,
   pih: Math.PI / 2,
+  pi3: Math.PI * 3,
   pi32: Math.PI * 3 / 2,
 
   static: Symbol('static'),
@@ -2721,6 +2722,10 @@ const O = {
     }else if((data = await O.rfAsync(`${path}.md`)) !== null){
       type = 0;
       path += '.md';
+      if(path in cache) return cache[path];
+    }else if((data = await O.rfAsync(`${path}.glsl`)) !== null){
+      type = 0;
+      path += '.glsl';
       if(path in cache) return cache[path];
     }else{
       O.error(`Failed to load data for project ${JSON.stringify(O.project)}`);

@@ -121,12 +121,16 @@ function injectLoading(){
     }
 
     if(O.module.remaining === 0 && 1 - k < LOADING_TRESHOLD)
-      return main()//.catch(error);
+      return main().catch(error);
 
     O.raf(render);
   }
 }
 
 function error(err){
-  O.error(err);
+  try{
+    O.glob.dom.err(err);
+  }catch{
+    O.error(err);
+  }
 }

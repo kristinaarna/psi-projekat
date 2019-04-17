@@ -8,15 +8,31 @@ const hash = require('../../hash');
 const Captcha = require('./captcha');
 const Token = require('./token');
 const check = require('./check');
+const editableData = require('./editable-user-data');
+
+const ALLOW_DELETING_PROFILE = 1;
 
 const methods = {
-  async getPosts(){
-    return await php.exec('getPosts');
+  async getPosts(keywords){
+    if(!check.text(keywords)) throw 'data';
+    return await php.exec('getPosts', {keywords});
   },
 
-  async getCompetitions(token){
+  async getCompetitions(token, keywords){
     if(!check.tokenn(token)) throw 'data';
-    return await php.exec('getCompetitions', {token});
+    if(!check.text(keywords)) throw 'data';
+    return await php.exec('getCompetitions', {token, keywords});
+  },
+
+  async getFunctionalities(token, keywords){
+    if(!check.tokenn(token)) throw 'data';
+    if(!check.text(keywords)) throw 'data';
+    return await php.exec('getFunctionalities', {token, keywords});
+  },
+
+  async getUsers(keywords){
+    if(!check.sstr(keywords)) throw 'data';
+    return await php.exec('getUsers', {keywords});
   },
 
   async getCaptcha(){
@@ -96,6 +112,12 @@ const methods = {
     await php.exec('giveUpFromCompetition', {token, idComp});
   },
 
+  async upgradeFunctionality(token, idFunc){
+    if(!check.token(token)) throw 'data';
+    if(!check.id(idFunc)) throw 'data';
+    await php.exec('upgradeFunctionality', {token, idFunc});
+  },
+
   async addPost(token, content){
     if(!check.token(token)) throw 'data';
     if(!check.text(content)) throw 'data';
@@ -107,6 +129,38 @@ const methods = {
     if(!check.sstr(title)) throw 'data';
     if(!check.text(desc)) throw 'data';
     await php.exec('addCompetition', {token, title, desc});
+  },
+
+  async editUserData(token, type, val){
+    if(!check.token(token)) throw 'data';
+    if(!check.str(type)) throw 'data';
+    if(!check.str(val)) throw 'data';
+    if(!O.has(editableData, type)) throw 'data';
+
+    val = val.trim();
+    if(val.length > editableData[type]) throw 'data';
+    else if(val.length === 0) val = null;
+
+    await php.exec('editUserData', {token, type, val});
+  },
+
+  async turnIntoMod(token, nick){
+    if(!check.token(token)) throw 'data';
+    if(!check.sstr(nick)) throw 'data';
+    await php.exec('turnIntoMod', {token, nick});
+  },
+
+  async deleteOwnProfile(token){
+    if(!ALLOW_DELETING_PROFILE) throw 'forbidden';
+    if(!check.token(token)) throw 'data';
+    await php.exec('deleteOwnProfile', {token});
+  },
+
+  async deleteOtherProfile(token, nick){
+    if(!ALLOW_DELETING_PROFILE) throw 'forbidden';
+    if(!check.token(token)) throw 'data';
+    if(!check.sstr(nick)) throw 'data';
+    await php.exec('deleteOtherProfile', {token, nick});
   },
 };
 

@@ -13,7 +13,7 @@
         return;
       }
 
-      if($row['isMod'] !== 1){
+      if($row['isMod'] === 0){
         $this->err('forbidden');
         return;
       }
@@ -24,7 +24,7 @@
           content,
           creationDate
         ) values (?, ?, ?)
-      ')->execute([$row['id'], $args->content, $this->date]);;
+      ')->execute([$row['id'], $args->content, $this->date]);
       $this->succ();
     }
   }

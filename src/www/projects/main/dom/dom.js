@@ -127,10 +127,17 @@ class DOM extends Element{
   err(err, cb){
     const errs = LS.errors.query;
 
-    if(err instanceof Error) err = err.message;
+    if(err instanceof Error) err = err.stack;
     else if(typeof err === 'string' && O.has(errs, err)) err = errs[err];
 
     this.alert(err, cb);
+  }
+
+  handle(promise, path=null){
+    promise.then(() => {
+      if(path === null) this.reload();
+      else this.nav(path);
+    }, this.err.bind(this));
   }
 
   createNavbar(){
@@ -241,7 +248,7 @@ class DOM extends Element{
     const page = new pages.Home(this.pageContent);
     this.page = page;
 
-    const posts = await backend.getPosts();
+    const posts = await backend.getPosts('');
 
     for(const post of posts){
       const {user, date, content} = post;
@@ -258,7 +265,7 @@ class DOM extends Element{
     const page = new pages.CompetitionPage(this.pageContent);
     this.page = page;
 
-    const comps = await backend.getCompetitions(O.lst.token);
+    const comps = await backend.getCompetitions(O.lst.token, '');
 
     for(const comp of comps){
       const {id, title, date, desc, applied} = comp;
@@ -304,7 +311,6 @@ class DOM extends Element{
 
     data.nick = nick;
     data.registrationDate = O.date(data.registrationDate);
-    data.isMod = LS.bool[data.isMod];
 
     const page = new pages.UserProfile(this.pageContent, data);
     this.page = page;

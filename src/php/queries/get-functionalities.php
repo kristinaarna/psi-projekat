@@ -1,12 +1,11 @@
 <?php
-  class GetCompetitions extends Query{
+  class GetFunctionalities extends Query{
     public function query($pdo, $args){
       if($args->token === null){
         $st = $pdo->prepare('
-          select idComp as id, title, description as `desc`, startDate as date, 0 as applied
-          from Competition
+          select idFunc as id, name, description as `desc`, points, 0 as upgraded
+          from Functionality
           where instr(description, ?) > 0
-          order by startDate desc
         ');
         $st->execute([$args->keywords]);
         $this->succ($st->fetchAll());
@@ -26,18 +25,17 @@
       }
 
       $st = $pdo->prepare('
-        select idComp as id, title, description as `desc`, startDate as date, (
-          select count(*) from Participating
-          where user = ? and comp = idComp
-        ) as applied
-        from Competition
+        select idFunc as id, name, description as `desc`, points, (
+          select count(*) from Upgrade
+          where user = ? and func = idFunc
+        ) as upgraded
+        from Functionality
         where instr(description, ?) > 0
-        order by startDate desc
       ');
       $st->execute([$id, $args->keywords]);
       $this->succ($st->fetchAll());
     }
   }
 
-  new GetCompetitions();
+  new GetFunctionalities();
 ?>

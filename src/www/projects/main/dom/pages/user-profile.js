@@ -1,52 +1,110 @@
 'use strict';
 
 const LS = require('../../strings');
+const backend = require('../../backend');
 const Element = require('../element');
-const Page = require('./page');
+const Form = require('../form');
 const elemCtors = require('../user-profile');
+const Page = require('./page');
 
 class UserProfile extends Page{
   constructor(parent, data){
     super(parent);
 
     this.data = data;
+    this.btns = [];
 
-    const labels = [
-      ['nick', 'nick'],
-      ['email', 'email'],
-      ['registrationDate', 'registrationDate'],
-      ['fullName', 'fullName'],
-      ['description', 'desc'],
-      ['isMod', 'isMod'],
-    ];
+    const me = O.lst.signedIn && data.nick === O.lst.nick;
+    const editable = O.lst.signedIn && O.lst.isMod && !data.isMod;
 
-    log(O.lst.isMod);
+    {
+      const avatar = new elemCtors.Avatar(this, data.nick, me);
+      this.avatar = avatar;
 
-    new elemCtors.Avatar(this, data.nick);
+      avatar.on('')
+    }
 
-    for(const [key, labelName] of labels){
-      const val = data[key];
-      if(val === null) continue;
+    {
+      const labels = [
+        ['nick', 'nick', 0],
+        ['email', 'email', 0],
+        ['registrationDate', 'registrationDate', 0],
+        ['points', 'points', 0],
+        ['fullName', 'fullName', 1],
+        ['description', 'desc', 1],
+        ['isMod', 'isMod', 0],
+      ];
 
-      const label = LS.labels.userProfile[labelName];
-      new elemCtors.Label(this, label, val);
+      for(const [key, labelName] of labels){
+        let val = data[key];
+        if(val === null) continue;
+
+        if(key === 'isMod') val = LS.bool[val];
+
+        const label = LS.labels.userProfile[labelName];
+        new elemCtors.Label(this, label, val);
+      }
+
+      if(O.lst.signedIn){
+        const strs = LS.labels.forms.buttons;
+
+        if(me){
+          const form = new Form(this);
+
+          {
+            const field = form.createField(Element.InputDropdown, 'type');
+            for(const [type, labelName, editable] of labels){
+              if(!editable) continue;
+              field.addOpt(type, LS.labels.userProfile[labelName]);
+            }
+          }
+
+          form.createField(Element.InputText, 'val', LS.labels.forms.fields.newVal);
+          form.addConfirm();
+
+          form.on('confirm', fields => {
+            const {type, val} = fields;
+            O.glob.dom.handle(backend.editUserData(O.lst.token, type, val));
+          });
+        }
+
+        if(!me && editable){
+          this.addBtn(strs.turnIntoMod, this.turnIntoMod.bind(this));
+        }
+
+        if(me || editable){
+          if(me) this.addBtn(strs.deleteOwnProfile, this.deleteOwnProfile.bind(this));
+          else this.addBtn(strs.deleteOtherProfile, this.deleteOtherProfile.bind(this));
+        }
+      }
     }
   }
 
   static title(){ return LS.titles.userProfile; }
 
-  createPost(...args){
-    const post = new Post(this, ...args);
-    this.addPost(post);
+  addBtn(label, listener){
+    const {btns} = this;
+    if(btns.length !== 0) this.br();
+
+    const btn = new elemCtors.UserPageButton(this, label).on('click', listener);
+    btns.push(btn);
+
+    return btn;
   }
 
-  addPost(post){
-    this.posts.push(post);
+  turnIntoMod(){
+    O.glob.dom.handle(backend.turnIntoMod(O.lst.token, this.data.nick));
   }
 
-  addPosts(posts){
-    for(const post of posts)
-      this.addPost(post);
+  deleteOwnProfile(){
+    O.glob.dom.handle(backend.deleteOwnProfile(O.lst.token).then(() => {
+      O.lst.token = null;
+      location.href = '/';
+    }));
+  }
+
+  deleteOtherProfile(){
+    O.glob.dom.handle(backend.deleteOtherProfile(O.lst.token, this.data.nick), '');
   }
 
   css(){ return 'user-profile'; }

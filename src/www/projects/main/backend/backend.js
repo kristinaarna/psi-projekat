@@ -13,6 +13,8 @@ const server = require('./server');
 const methods = [
   'getPosts',
   'getCompetitions',
+  'getFunctionalities',
+  'getUsers',
   'getCaptcha',
   'register',
   'login',
@@ -20,8 +22,13 @@ const methods = [
   'getUserData',
   'applyForCompetition',
   'giveUpFromCompetition',
+  'upgradeFunctionality',
   'addPost',
   'addCompetition',
+  'editUserData',
+  'turnIntoMod',
+  'deleteOwnProfile',
+  'deleteOtherProfile',
 ];
 
 module.exports = initMethods(methods);

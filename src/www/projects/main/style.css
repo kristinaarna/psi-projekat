@@ -289,7 +289,8 @@ body{
   margin-top: 10px;
 }
 
-.competition-title{
+.competition-title,
+.functionality-name{
   font-weight: bold;
 }
 
@@ -299,7 +300,8 @@ body{
   display: block;
 }
 
-.competition-desc{
+.competition-desc,
+.functionality-desc{
   margin-top: 8px;
   display: block;
 }
@@ -323,4 +325,23 @@ body{
 .user-profile-label{
   display: block;
   font-weight: bold;
+}
+
+.search-results{
+  width: 100%;
+}
+
+.user-item{
+  display: block;
+  margin: 4px 0px;
+  font-weight: bold;
+}
+
+.user-page-btn{
+  margin: 0px;
+  margin-top: 16px;
+}
+
+.avatar-file-btn{
+  display: none;
 }

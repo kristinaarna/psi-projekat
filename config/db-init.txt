@@ -7,6 +7,7 @@ CREATE TABLE User (
   isMod                BIT NOT NULL,
   token                VARCHAR(1024) NULL,
   registrationDate     BIGINT NOT NULL,
+  points               BIGINT NOT NULL,
   fullName             VARCHAR(64) NULL,
   description          text NULL,
   PRIMARY KEY (idUser)
@@ -53,8 +54,9 @@ CREATE TABLE Participating (
 
 CREATE TABLE Functionality (
   idFunc               INTEGER NOT NULL AUTO_INCREMENT,
-  idUser               INTEGER NOT NULL,
+  name                 VARCHAR(1024) NOT NULL,
   description          VARCHAR(1024) NULL,
+  points               BIGINT NOT NULL,
   PRIMARY KEY (idFunc, idUser),
   FOREIGN KEY (idUser) REFERENCES User (idUser)
 );
