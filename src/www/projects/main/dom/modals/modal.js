@@ -10,7 +10,7 @@ class Modal extends Element.Region{
   }
 
   css(){ return 'modal'; }
-};
+}
 
 Modal.ButtonOk = ButtonOk;
 

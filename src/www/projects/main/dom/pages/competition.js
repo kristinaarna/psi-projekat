@@ -71,7 +71,7 @@ class CompetitionPage extends Page{
   }
 
   css(){ return 'competition-page'; }
-};
+}
 
 CompetitionPage.Competition = Competition;
 

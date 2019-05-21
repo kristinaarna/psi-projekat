@@ -320,7 +320,7 @@ class DOM extends Element{
     const page = new pages.Error(this.pageContent, status, msg);
     this.page = page;
   }
-};
+}
 
 DOM.Element = Element;
 

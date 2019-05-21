@@ -132,6 +132,6 @@ class HTTPServer extends Server{
       err(500, String(e));
     }
   }
-};
+}
 
 module.exports = HTTPServer;

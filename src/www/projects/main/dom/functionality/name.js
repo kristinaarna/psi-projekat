@@ -10,6 +10,6 @@ class FunctionalityName extends Element.Span{
   }
 
   css(){ return 'functionality-name'; }
-};
+}
 
 module.exports = FunctionalityName;

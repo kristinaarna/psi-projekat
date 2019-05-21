@@ -1,7 +1,7 @@
 language: generic
 
 before_script:
-  - nvm install 11
+  - nvm install 12
   - phpenv global 7.0
   - sudo service mysql start || true
 

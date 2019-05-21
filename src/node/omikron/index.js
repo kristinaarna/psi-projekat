@@ -17,11 +17,11 @@ class Window{
   constructor(){
     this.document = new Document();
   }
-};
+}
 
 class Document{
   constructor(){}
-};
+}
 
 module.exports = getFramework();
 

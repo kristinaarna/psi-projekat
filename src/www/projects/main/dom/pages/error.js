@@ -30,6 +30,6 @@ class Error extends Page{
   }
 
   css(){ return 'page-error'; }
-};
+}
 
 module.exports = Error;

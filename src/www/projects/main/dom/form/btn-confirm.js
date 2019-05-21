@@ -12,6 +12,6 @@ class ButtonConfirm extends Element.Button{
   }
 
   css(){ return 'btn-confirm'; }
-};
+}
 
 module.exports = ButtonConfirm;

@@ -19,7 +19,7 @@ class Captcha extends Element.Image{
   }
 
   css(){ return 'captcha'; }
-};
+}
 
 module.exports = Captcha;
 

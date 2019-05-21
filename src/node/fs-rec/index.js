@@ -28,7 +28,7 @@ class FileQueueElem{
     var {fullPath, relativePath, depth, name, isDir, processed} = elem;
     return new FileQueueElem(fullPath, relativePath, depth, name, isDir, processed);
   }
-};
+}
 
 module.exports = {
   FileQueueElem,

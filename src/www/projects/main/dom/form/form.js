@@ -67,7 +67,7 @@ class Form extends Element.Region{
   }
 
   css(){ return 'form'; }
-};
+}
 
 Form.ButtonConfirm = ButtonConfirm;
 

@@ -27,6 +27,6 @@ class Login extends Page{
   static title(){ return LS.titles.language; }
 
   css(){ return 'page-language'; }
-};
+}
 
 module.exports = Login;

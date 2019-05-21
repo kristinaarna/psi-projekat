@@ -108,6 +108,6 @@ class UserProfile extends Page{
   }
 
   css(){ return 'user-profile'; }
-};
+}
 
 module.exports = UserProfile;

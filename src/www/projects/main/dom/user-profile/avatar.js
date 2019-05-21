@@ -18,7 +18,7 @@ class Avatar extends Element.Div{
   }
 
   css(){ return 'user-profile-avatar'; }
-};
+}
 
 Avatar.AvatarImage = AvatarImage;
 Avatar.AvatarFileButton = AvatarFileButton;

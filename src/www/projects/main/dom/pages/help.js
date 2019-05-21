@@ -14,6 +14,6 @@ class Help extends Page{
   static title(){ return LS.titles.help; }
 
   css(){ return 'page-help'; }
-};
+}
 
 module.exports = Help;

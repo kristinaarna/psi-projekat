@@ -51,6 +51,6 @@ class LocalStorage extends EnhancedStorage{
   }
 
   get signedIn(){ return this.token !== null; }
-};
+}
 
 module.exports = LocalStorage;

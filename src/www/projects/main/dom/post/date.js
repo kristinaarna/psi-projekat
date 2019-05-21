@@ -10,6 +10,6 @@ class PostDate extends Element.Span{
   }
 
   css(){ return 'post-date'; }
-};
+}
 
 module.exports = PostDate;

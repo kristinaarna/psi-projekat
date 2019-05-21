@@ -9,6 +9,6 @@ class PostUser extends Element.Link{
   }
 
   css(){ return 'post-user'; }
-};
+}
 
 module.exports = PostUser;

@@ -18,6 +18,6 @@ class Alert extends Modal{
   }
 
   css(){ return 'alert'; }
-};
+}
 
 module.exports = Alert;

@@ -9,6 +9,6 @@ class AvatarFileButton extends Element.InputFile{
   }
 
   css(){ return 'avatar-file-btn'; }
-};
+}
 
 module.exports = AvatarFileButton;

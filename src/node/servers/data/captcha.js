@@ -96,7 +96,7 @@ class Captcha{
     delete captchas[this.token];
     fs.unlinkSync(this.file);
   }
-};
+}
 
 module.exports = Captcha;
 

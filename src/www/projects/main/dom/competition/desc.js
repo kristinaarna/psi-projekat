@@ -9,6 +9,6 @@ class CompetitionDescription extends Element.Span{
   }
 
   css(){ return 'competition-desc'; }
-};
+}
 
 module.exports = CompetitionDescription;

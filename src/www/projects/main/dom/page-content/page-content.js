@@ -9,6 +9,6 @@ class PageContent extends Element.Div{
   }
 
   css(){ return 'page-content'; }
-};
+}
 
 module.exports = PageContent;

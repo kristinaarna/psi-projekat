@@ -10,6 +10,6 @@ class CompetitionDate extends Element.Span{
   }
 
   css(){ return 'competition-date'; }
-};
+}
 
 module.exports = CompetitionDate;

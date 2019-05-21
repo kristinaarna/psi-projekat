@@ -10,6 +10,7 @@ const TAB = ' '.repeat(TAB_SIZE);
 const codeExts = [
   'bat',
   'js',
+  'glsl',
   'php',
   'sql',
 ];

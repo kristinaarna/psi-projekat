@@ -165,4 +165,4 @@ class ReadlineInterface extends EventEmitter{
     lines.push(buf.toString());
     ebuf.reset();
   }
-};
+}

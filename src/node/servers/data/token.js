@@ -31,6 +31,6 @@ class Token{
   toString(){
     return this.str;
   }
-};
+}
 
 module.exports = Token;

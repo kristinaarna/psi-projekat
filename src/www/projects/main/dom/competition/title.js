@@ -12,6 +12,6 @@ class CompetitionTitle extends Element.Span{
   }
 
   css(){ return 'competition-title'; }
-};
+}
 
 module.exports = CompetitionTitle;

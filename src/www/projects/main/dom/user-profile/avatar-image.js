@@ -10,7 +10,7 @@ class AvatarImage extends Element.Image{
   }
 
   css(){ return 'user-profile-avatar-img'; }
-};
+}
 
 module.exports = AvatarImage;
 

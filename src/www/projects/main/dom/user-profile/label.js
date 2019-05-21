@@ -10,6 +10,6 @@ class Label extends Element.Span{
   }
 
   css(){ return 'user-profile-label'; }
-};
+}
 
 module.exports = Label;

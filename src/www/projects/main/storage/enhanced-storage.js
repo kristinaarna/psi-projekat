@@ -21,6 +21,6 @@ class EnhancedStorage extends O.Storage{
   static get version(){ return 0; }
 
   init(){ O.virtual('init'); }
-};
+}
 
 module.exports = EnhancedStorage;

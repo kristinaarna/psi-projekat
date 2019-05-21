@@ -549,6 +549,6 @@ class State{
     this.start = start;
     this.end = end;
   }
-};
+}
 
 module.exports = TextEditor;

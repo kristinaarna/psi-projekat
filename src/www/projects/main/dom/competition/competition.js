@@ -44,7 +44,7 @@ class Competition extends Element.Region{
 
   getTitle(){ return this.title.title; }
   css(){ return 'post'; }
-};
+}
 
 Competition.CompetitionTitle = CompetitionTitle;
 Competition.CompetitionDate = CompetitionDate;

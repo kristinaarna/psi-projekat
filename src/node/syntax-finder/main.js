@@ -6,7 +6,7 @@ const O = require('../omikron');
 const finder = require('./finder');
 const skipList = require('./skip-list');
 
-const strToFind = process.argv[2].toLowerCase();
+const strToFind = process.argv.slice(2).join(' ').toLowerCase();
 
 const cwd = __dirname;
 const mainDir = path.join(cwd, '../../..');

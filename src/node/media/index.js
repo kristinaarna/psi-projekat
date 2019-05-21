@@ -132,7 +132,7 @@ class Video{
   resume(){ this.proc.stdout.resume(); }
   isReady(){ return !shouldExit && this.index === this.iMax; }
   hasMore(){ return !shouldExit && this.f !== this.framesNum; }
-};
+}
 
 init();
 

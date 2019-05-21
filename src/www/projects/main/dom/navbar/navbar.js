@@ -52,6 +52,6 @@ class Navbar extends Element.Div{
   }
 
   css(){ return 'navbar'; }
-};
+}
 
 module.exports = Navbar;

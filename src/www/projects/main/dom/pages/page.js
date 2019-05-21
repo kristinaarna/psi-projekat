@@ -18,6 +18,6 @@ class Page extends Element.Div{
   title(){ return this.constructor.title(); }
 
   css(){ return 'page'; }
-};
+}
 
 module.exports = Page;

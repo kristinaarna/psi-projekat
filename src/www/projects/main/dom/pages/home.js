@@ -48,7 +48,7 @@ class Home extends Page{
   }
 
   css(){ return 'home'; }
-};
+}
 
 Home.Post = Post;
 

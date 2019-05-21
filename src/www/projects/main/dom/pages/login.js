@@ -60,6 +60,6 @@ class Login extends Page{
   static title(){ return LS.titles.login; }
 
   css(){ return 'login'; }
-};
+}
 
 module.exports = Login;

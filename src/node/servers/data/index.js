@@ -58,7 +58,7 @@ class DataServer extends Server{
       });
     });
   }
-};
+}
 
 module.exports = DataServer;
 

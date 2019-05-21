@@ -222,16 +222,40 @@ class Color extends Uint8ClampedArray{
 };
 
 class EventEmitter{
-  constructor(){
-    this.ls = O.obj();
+  #ls = O.obj();
+
+  on(type, func){
+    const ls = this.#ls;
+    if(!(type in ls)) ls[type] = new Map();
+    ls[type].set(func, 1);
+    return this;
+  }
+
+  addEventListener(type, func){
+    return this.on(type, func);
+  }
+
+  ael(type, func){
+    return this.on(type, func);
+  }
+
+  once(type, func){
+    const ls = this.#ls;
+    if(!(type in ls)) ls[type] = new Map();
+    ls[type].set(func, 0);
+    return this;
   }
 
   removeListener(type, func){
-    const {ls} = this;
+    const ls = this.#ls;
     if(!(type in ls)) return;
     ls[type].delete(func);
     if(ls[type].size === 0) delete ls[type];
     return this;
+  }
+
+  rel(type, func){
+    return this.removeListener(type, func);
   }
 
   removeAllListeners(type){
@@ -239,22 +263,8 @@ class EventEmitter{
     return this;
   }
 
-  on(type, func){
-    const {ls} = this;
-    if(!(type in ls)) ls[type] = new Map();
-    ls[type].set(func, 1);
-    return this;
-  }
-
-  once(type, func){
-    const {ls} = this;
-    if(!(type in ls)) ls[type] = new Map();
-    ls[type].set(func, 0);
-    return this;
-  }
-
   emit(type, ...args){
-    const {ls} = this;
+    const ls = this.#ls;
     if(!(type in ls)) return this;
 
     for(const [func, repeat] of ls[type]){
@@ -580,7 +590,6 @@ class GridUI extends EventEmitter{
 
     this.wrap = 0;
 
-    this.ls = O.obj();
     this.aels();
   }
 
@@ -1202,8 +1211,8 @@ class EnhancedRenderingContext{
 
     this.fillStyle = 'white';
     this.strokeStyle = 'black';
-    this.textAlign = 'center';
     this.textBaseline = 'middle';
+    this.textAlign = 'center';
 
     this.drawImage = g.drawImage.bind(g);
 
@@ -1805,7 +1814,7 @@ class IO{
     if((this.outputIndex & 7) === 0) this.addByte();
   }
 
-  hasMore(){
+  get hasMore(){
     return (this.inputIndex >> 4) < this.input.length;
   }
 
@@ -1879,8 +1888,9 @@ class Serializer extends IO{
     return num;
   }
 
-  writeInt(num){
-    num = (num | 0) + 1;
+  writeInt(num, signed=1){
+    const snum = num;
+    num = -~Math.abs(num);
 
     while(num !== 1){
       super.write(1);
@@ -1888,27 +1898,42 @@ class Serializer extends IO{
       num >>= 1;
     }
 
-    return super.write(0);
+    super.write(0);
+
+    if(signed && snum !== 0)
+      super.write(snum < 0);
+
+    return this;
   }
 
-  readInt(){
+  readInt(signed=1){
     let num = 0;
     let mask = 1;
     let len = 0;
 
     while(super.read()){
-      if(++len === 30)
-        throw new RangeError('Too large integer');
-      if(super.read())
-        num |= mask;
+      if(super.read()) num |= mask;
       mask <<= 1;
     }
 
-    return (num | mask) - 1;
+    num = ~-(num | mask);
+
+    if(signed && num !== 0 && super.read())
+      num = -num;
+
+    return num;
+  }
+
+  writeUint(num){
+    return this.writeInt(num, 0);
+  }
+
+  readUint(){
+    return this.readInt(0);
   }
 
   writeBuf(buf){
-    this.writeInt(buf.length);
+    this.writeUint(buf.length);
 
     for(const byte of buf)
       this.write(byte, 255);
@@ -1917,7 +1942,7 @@ class Serializer extends IO{
   }
 
   readBuf(){
-    const len = this.readInt();
+    const len = this.readUint();
     const buf = O.Buffer.alloc(len);
 
     for(let i = 0; i !== len; i++)
@@ -1953,176 +1978,9 @@ class Serializer extends IO{
 class Serializable{
   ser(ser=new O.Serializer()){ O.virtual('ser'); }
   deser(ser){ O.virtual('deser'); }
-  static deser(ser){ O.virtual('deser'); } // Optional
 
-  reser(){
-    return this.deser(new O.Serializer(this.ser().getOutput()));
-  }
-};
-
-class Graph extends Serializable{
-  constructor(nodeCtors, maxSize=null){
-    super();
-
-    this.nodeCtors = nodeCtors;
-    this.maxSize = maxSize;
-    this.nodes = new Set();
-    this.ctorsNum = nodeCtors.length;
-
-    {
-      const ctorsMap = new Map();
-      const ctorsKeys = new Map();
-
-      nodeCtors.forEach((ctor, index) => {
-        ctorsMap.set(ctor, index);
-        ctorsKeys.set(ctor, ctor.keys());
-      });
-
-      this.ctorsMap = ctorsMap;
-      this.ctorsKeys = ctorsKeys;
-    }
-  }
-
-  addNode(node){
-    const {maxSize} = this;
-
-    if(maxSize !== null && this.size === maxSize){
-      this.cleanup();
-      if(this.size === maxSize)
-        throw new RangeError('Maximum graph size exceeded');
-    }
-
-    this.nodes.add(node);
-  }
-
-  ser(ser=new O.Serializer()){
-    const {nodes, ctorsNum, ctorsMap, ctorsKeys} = this;
-    const lastCtorIndex = ctorsNum - 1;
-
-    const all = new Set(nodes);
-    const done = new Map();
-    const queue = [];
-
-    const lastNodeIndex = all.size - 1;
-    ser.writeInt(all.size);
-
-    while(all.size !== 0){
-      let first = 1;
-
-      queue.push(O.first(all));
-
-      while(queue.length !== 0){
-        const node = queue.shift();
-
-        if(node === null){
-          ser.write(0);
-          continue;
-        }else if(!first){
-          ser.write(1);
-        }
-
-        const ctor = node.constructor;
-        const seen = done.has(node);
-        const index = seen ? done.get(node) : done.size;
-
-        if(first) first = 0;
-        else ser.write(index, Math.min(done.size, lastNodeIndex));
-        if(seen) continue;
-
-        all.delete(node);
-        done.set(node, index);
-
-        ser.write(ctorsMap.get(ctor), lastCtorIndex);
-        node.ser(ser);
-
-        for(const key of ctorsKeys.get(ctor))
-          queue.push(node[key]);
-      }
-    }
-
-    return ser;
-  }
-
-  deser(ser){
-    const {nodeCtors, ctorsNum, ctorsKeys} = this;
-    const lastCtorIndex = ctorsNum - 1;
-
-    const nodes = new Set();
-    this.nodes = nodes;
-
-    const nodesNum = ser.readInt();
-    const lastNodeIndex = nodesNum - 1;
-
-    const done = [];
-    const queue = [];
-
-    while(nodes.size !== nodesNum){
-      let first = 1;
-
-      while(queue.length !== 0 || first){
-        const isNull = first ? 0 : !ser.read();
-        const index = first ? nodes.size : isNull ? -1 : ser.read(Math.min(nodes.size, lastNodeIndex));
-        const seen = isNull || index !== nodes.size;
-        const node = seen ? isNull ? null : done[index] : new nodeCtors[ser.read(lastCtorIndex)](this);
-
-        if(first){
-          first = 0;
-        }else{
-          const elem = queue[0];
-          const keys = ctorsKeys.get(elem[0].constructor);
-          elem[0][keys[elem[1]++]] = node;
-          if(elem[1] === keys.length) queue.shift();
-        }
-
-        if(seen) continue;
-
-        done.push(node);
-        node.deser(ser);
-
-        if(ctorsKeys.get(node.constructor).length !== 0)
-          queue.push([node, 0]);
-      }
-    }
-
-    return this;
-  }
-
-  cleanup(){
-    const {ctorsKeys} = this;
-    if(this.size === 0) return this;
-
-    const nodes = new Set();
-    const queue = [O.first(this.nodes)];
-
-    while(queue.length !== 0){
-      const node = queue.shift();
-
-      nodes.add(node);
-
-      for(const key of ctorsKeys.get(node.constructor)){
-        const next = node[key];
-        if(next === null || nodes.has(next)) continue;
-        queue.push(next);
-      }
-    }
-
-    this.nodes = nodes;
-
-    return this;
-  }
-
-  get size(){ return this.nodes.size; }
-};
-
-class GraphNode extends Serializable{
-  constructor(graph){
-    super();
-
-    this.graph = graph;
-    graph.addNode(this);
-  }
-
-  static keys(){ O.virtual('keys'); }
+  static deser(ser){ return new this().deser(ser); }
+  reser(){ return this.deser(new O.Serializer(this.ser().getOutput())); }
 };
 
 class Storage extends Serializable{
@@ -2296,8 +2154,6 @@ const O = {
   IO,
   Serializer,
   Serializable,
-  Graph,
-  GraphNode,
   Storage,
   Semaphore,
 
@@ -2342,10 +2198,10 @@ const O = {
       random number generator that depends on current time in
       milliseconds and internal 256-bit state.
     */
-    O.enhanceRNG(O.symbols.enhanceRNG);
+    //O.enhanceRNG(O.symbols.enhanceRNG);
 
     if(loadProject){
-      O.project = O.urlParam('project', 'main');
+      O.project = O.urlParam('project');
 
       if(O.project == null){
         O.rf(`projects.txt`, (status, projects) => {
@@ -2414,16 +2270,19 @@ const O = {
         logOrig(...args);
       }
 
-      return args[args.length - 1];
+      return O.last(args);
     };
 
-    logFunc.inc = (val=1) => {
-      indent += val;
+    logFunc.inc = (...args) => {
+      if(args.length !== 0) logFunc.apply(null, args);
+      indent++;
+      return O.last(args);
     };
 
-    logFunc.dec = (val=1) => {
-      indent -= val;
-      if(indent < 0) indent = 0;
+    logFunc.dec = (...args) => {
+      if(args.length !== 0) logFunc.apply(null, args);
+      if(indent !== 0) indent--;
+      return O.last(args);
     };
 
     logFunc.get = () => {
@@ -2727,6 +2586,11 @@ const O = {
       type = 0;
       path += '.glsl';
       if(path in cache) return cache[path];
+    }else if((data = await O.rfAsync(`${path}.obj`)) !== null){
+      // TODO: remove this
+      type = 0;
+      path += '.obj';
+      if(path in cache) return cache[path];
     }else{
       O.error(`Failed to load data for project ${JSON.stringify(O.project)}`);
       return null;
@@ -2944,17 +2808,21 @@ const O = {
     return arr[arr.length - 1];
   },
 
+  fst(set, defaultVal){ return O.first(set, defaultVal); },
+
   /*
     Random number generator
   */
 
   enhanceRNG(sym){
-    if(sym !== O.symbols.enhanceRNG)
+    O.noimpl('enhanceRNG');
+
+    /*if(sym !== O.symbols.enhanceRNG)
       throw new TypeError('Function "enhanceRNG" should not be called explicitly');
 
     O.enhancedRNG = 1;
     O.randState = O.Buffer.from(O.ca(32, () => Math.random() * 256));
-    O.repeat(10, () => O.random());
+    O.repeat(10, () => O.random());*/
   },
 
   randSeed(seed){
@@ -3196,7 +3064,7 @@ const O = {
   sf(val){ return JSON.stringify(val, null, 2); },
   rev(str){ return str.split('').reverse().join(''); },
   has(obj, key){ return Object.hasOwnProperty.call(obj, key); },
-  desc(obj, key){ return Object.getOwnPropertyDescriptor.call(obj, key); },
+  desc(obj, key){ return Object.getOwnPropertyDescriptor(obj, key); },
   now(){ return Date.now(); },
 
   /*
@@ -3442,7 +3310,7 @@ const O = {
 
   base64: (() => {
     const encode = data => {
-      const buf = O.Buffer.from(data);
+      const buf = O.Buffer.from(String(data));
 
       let str = '';
       let val = 0;
@@ -3473,6 +3341,8 @@ const O = {
     };
 
     const decode = str => {
+      str = String(str);
+
       const pad = str.match(/\=*$/)[0].length;
       const extraBytes = pad !== 0 ? pad : 0;
       const len = (str.length >> 2) * 3 - extraBytes;

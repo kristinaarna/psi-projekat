@@ -35,6 +35,6 @@ class Sandbox extends Page{
   static title(){ return LS.titles.sandbox; }
 
   css(){ return 'sandbox'; }
-};
+}
 
 module.exports = Sandbox;

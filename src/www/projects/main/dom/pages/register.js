@@ -64,6 +64,6 @@ class Register extends Page{
   static title(){ return LS.titles.register; }
 
   css(){ return 'register'; }
-};
+}
 
 module.exports = Register;

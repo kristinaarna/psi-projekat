@@ -38,7 +38,7 @@ class Functionality extends Element.Region{
 
   getName(){ return this.name.name; }
   css(){ return 'post'; }
-};
+}
 
 Functionality.FunctionalityName = FunctionalityName;
 Functionality.FunctionalityDescription = FunctionalityDescription;

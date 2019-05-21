@@ -9,6 +9,6 @@ class FunctionalityDescription extends Element.Span{
   }
 
   css(){ return 'functionality-desc'; }
-};
+}
 
 module.exports = FunctionalityDescription;

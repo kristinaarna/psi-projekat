@@ -9,6 +9,6 @@ class PostContent extends Element.Span{
   }
 
   css(){ return 'post-content'; }
-};
+}
 
 module.exports = PostContent;

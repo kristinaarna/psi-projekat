@@ -14,6 +14,6 @@ class Server{
 
   start(){ O.virtual('start'); }
   close(){ O.virtual('close'); }
-};
+}
 
 module.exports = Server;

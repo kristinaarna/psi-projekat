@@ -16,7 +16,7 @@ class Post extends Element.Region{
   }
 
   css(){ return 'post'; }
-};
+}
 
 Post.PostUser = PostUser;
 Post.PostDate = PostDate;

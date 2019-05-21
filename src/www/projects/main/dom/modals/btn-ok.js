@@ -13,6 +13,6 @@ class ButtonOK extends Form.ButtonConfirm{
   }
 
   css(){ return 'btn-ok'; }
-};
+}
 
 module.exports = ButtonOK;

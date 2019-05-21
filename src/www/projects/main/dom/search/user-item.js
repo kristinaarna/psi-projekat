@@ -9,6 +9,6 @@ class UserItem extends Element.Link{
   }
 
   css(){ return 'user-item'; }
-};
+}
 
 module.exports = UserItem;

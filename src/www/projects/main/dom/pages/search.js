@@ -78,6 +78,6 @@ class Search extends Page{
   static title(){ return LS.titles.search; }
 
   css(){ return 'page-search'; }
-};
+}
 
 module.exports = Search;

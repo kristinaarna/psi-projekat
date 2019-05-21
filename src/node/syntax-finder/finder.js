@@ -40,4 +40,4 @@ class Element{
   toString(){
     return `${this.filePath}:${this.line}`;
   }
-};
+}

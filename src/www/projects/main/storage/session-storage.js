@@ -26,6 +26,6 @@ class SessionStorage extends EnhancedStorage{
 
     return this;
   }
-};
+}
 
 module.exports = SessionStorage;
