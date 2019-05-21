@@ -1,35 +1,20 @@
 'use strict';
 
+const Engine = require('../../../../../node/programming-language/engine');
 const LS = require('../../strings');
 const Element = require('../element');
 const TextEditor = require('../text-editor');
 const Form = require('../form');
+const elemCtors = require('../sandbox');
 const Page = require('./page');
 
 class Sandbox extends Page{
   constructor(parent){
     super(parent);
 
+    this.choice = new elemCtors.LanguageChoice(this);
     this.editor = new TextEditor(this);
     this.editor.val = LS.texts.scriptTemplate;
-    this.start = new Form.ButtonConfirm(this, LS.labels.sandbox.buttons.start);
-
-    this.aels();
-  }
-
-  aels(){
-    this.start.on('click', () => {
-      const src = this.editor.val;
-      let func = null;
-
-      try{ func = new Function(src); }
-      catch{}
-
-      if(func === null)
-        return O.glob.dom.alert(LS.errors.syntaxError);
-
-      O.glob.dom.noimpl();
-    });
   }
 
   static title(){ return LS.titles.sandbox; }

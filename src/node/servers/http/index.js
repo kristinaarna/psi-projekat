@@ -15,6 +15,7 @@ const INDEX_FILE = 'index.htm';
 
 const cwd = __dirname;
 const wwwDir = path.join(cwd, '../../../www');
+const nodeDir = path.join(cwd, '../..');
 
 class HTTPServer extends Server{
   constructor(port){
@@ -114,7 +115,11 @@ class HTTPServer extends Server{
           e404();
       };
 
-      let entry = path.join(wwwDir, pth);
+      const isNode = pth.startsWith('node/');
+      const dir = isNode ? nodeDir : wwwDir;
+      const pthNew = isNode ? pth.split('/').slice(1).join('/') : pth;
+
+      let entry = path.join(dir, pthNew);
       check(entry);
 
       const stat = fs.statSync(entry);

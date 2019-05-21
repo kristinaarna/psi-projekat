@@ -5,22 +5,23 @@ const path = require('path');
 const assert = require('assert');
 const O = require('../omikron');
 const format = require('../format');
+const PL = require('./programming-language');
 const Engine = require('./engine');
 
-setTimeout(main);
+setTimeout(() => main().catch(log));
 
-function main(){
+async function main(){
   const lang = 'Functional()';
-  const src = O.rfs(format.path('-dw/1.txt'), 1);
-  const input = 'abcde';
+  const src = O.rfs(format.path('-dw/src.txt'), 1);
+  const input = O.rfs(format.path('-dw/input.txt'), 1);
 
-  const maxSize = 1e7;
-  const eng = new Engine(lang, src, maxSize, maxSize - 1e3);
+  const maxSize = 1e8;
+  const eng = new Engine(await PL.get(lang), src, maxSize, maxSize - 1e3);
   const io = new O.IO(input);
 
   const onRead = (buf, len) => {
     buf[0] = io.read();
-    return io.hasMore();
+    return io.hasMore;
   };
 
   const onWrite = (buf, len) => {
