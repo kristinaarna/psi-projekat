@@ -4,10 +4,19 @@ const fs = require('fs');
 const path = require('path');
 const Process = require('./process');
 
-const cwd = __dirname;
-const omikronScript = path.join(cwd, '../../frameworks/omikron.js');
+const VERSION = '12.0.0';
 
 const isElectron = 'navigator' in global;
+if(isElectron) initElectron();
+
+const ver = process.version.slice(1);
+if(ver !== VERSION){
+  console.log(`Process version must be ${VERSION} (found ${ver})`);
+  throw '';
+}
+
+const cwd = __dirname;
+const omikronScript = path.join(cwd, '../../frameworks/omikron.js');
 
 const dirs = {
   omikron: omikronScript,
@@ -26,37 +35,6 @@ class Document{
 module.exports = getFramework();
 
 function getFramework(){
-  if(isElectron){
-    const electron = require('electron');
-    const ipc = electron.ipcRenderer;
-
-    console.log = (...args) => void ipc.send('log', args);
-    console.info = (...args) => void ipc.send('info', args);
-    console.error = (...args) => void ipc.send('error', args);
-    console.logRaw = data => void ipc.send('logRaw', data);
-
-    let catched = 0;
-
-    process.on('uncaughtException', err => {
-      if(catched) return;
-      catched = 1;
-
-      if(err === null){
-        err = O.ftext(`
-
-          === ERROR ===
-
-          An unexpected error has occured somewhere, but we
-          are unable to detect where exactly.
-        `);
-      }
-
-      log(err);
-
-      setTimeout(() => window.close(), 500);
-    });
-  }
-
   var str = fs.readFileSync(omikronScript).toString();
   str = str.split(/\r\n|\r|\n/);
   str[str.length - 1] = 'return O;';
@@ -78,6 +56,37 @@ function getFramework(){
 
 function init(O){
   O.proc = new Process(O, process);
+}
+
+function initElectron(){
+  const electron = require('electron');
+  const ipc = electron.ipcRenderer;
+
+  console.log = (...args) => void ipc.send('log', args);
+  console.info = (...args) => void ipc.send('info', args);
+  console.error = (...args) => void ipc.send('error', args);
+  console.logRaw = data => void ipc.send('logRaw', data);
+
+  let catched = 0;
+
+  process.on('uncaughtException', err => {
+    if(catched) return;
+    catched = 1;
+
+    if(err === null){
+      err = O.ftext(`
+
+        === ERROR ===
+
+        An unexpected error has occured somewhere, but we
+        are unable to detect where exactly.
+      `);
+    }
+
+    log(err);
+
+    setTimeout(() => window.close(), 500);
+  });
 }
 
 function getReq(){

@@ -57,7 +57,7 @@ class ProgrammingLanguage{
     }
   }
 
-  static get(langName){
+  static async get(langName){
     if(!O.has(langsList, langName))
       throw new TypeError(`Unknown programming language ${O.sf(langName)}`);
 

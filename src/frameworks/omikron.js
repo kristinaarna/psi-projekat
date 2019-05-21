@@ -267,12 +267,14 @@ class EventEmitter{
     const ls = this.#ls;
     if(!(type in ls)) return this;
 
+    let val = null;
+
     for(const [func, repeat] of ls[type]){
-      func(...args);
+      val = func(...args);
       if(!repeat) this.removeListener(type, func);
     }
 
-    return this;
+    return val;
   }
 };
 
@@ -2114,6 +2116,10 @@ const O = {
   fastSha256: 1,
   rseed: null,
 
+  // Log
+
+  log: null,
+
   // Node modules
 
   nm: null,
@@ -2190,6 +2196,7 @@ const O = {
       O.overrideConsole();
 
     O.module.cache = O.obj();
+    O.modulesPolyfill = O.modulesPolyfill();
 
     /*
       Older versions of Google Chrome had issues with Math.random()
@@ -2198,26 +2205,40 @@ const O = {
       random number generator that depends on current time in
       milliseconds and internal 256-bit state.
     */
-    //O.enhanceRNG(O.symbols.enhanceRNG);
+    // O.enhanceRNG(O.symbols.enhanceRNG);
 
     if(loadProject){
-      O.project = O.urlParam('project');
+      const mainProject = 'main';
+      const project = O.urlParam('project');
+
+      const loadProj = project => {
+        O.project = project;
+
+        if(!O.projectTest(O.project))
+        return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
+
+        // TODO: fix this
+        O.req(`/projects/${O.project}/main`)//.catch(O.error);
+      };
 
       if(O.project == null){
         O.rf(`projects.txt`, (status, projects) => {
           if(status != 200) return O.error(`Failed to load projects list.`);
 
+          projects = O.sortAsc(O.sanl(projects));
+
+          if(projects.includes(mainProject))
+            return loadProj(mainProject);
+
           O.title('Projects');
-          O.sortAsc(O.sanl(projects)).forEach((project, index, projects) => {
+
+          projects.forEach((project, index, projects) => {
             O.ceLink(O.body, O.projectToName(project), `/?project=${project}`);
             if(index < projects.length - 1) O.ceBr(O.body);
           });
         });
       }else{
-        if(!O.projectTest(O.project))
-        return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
-
-        O.req(`/projects/${O.project}/main`).catch(O.error);
+        loadProj(O.project);
       }
     }
   },
@@ -2246,20 +2267,21 @@ const O = {
   overrideConsole(){
     const {global, isNode, isElectron} = O;
 
-    var console = global.console;
-    var logOrig = console.log;
+    const console = global.console;
+    const logOrig = console.log;
 
-    var indent = 0;
+    let indent = 0;
 
-    var logFunc = (...args) => {
+    const logFunc = (...args) => {
       if(args.length === 0){
         logOrig('');
         return;
       }
 
+      const indentStr = ' '.repeat(indent << 1);
+
       if(isNode || isElectron){
-        var indentStr = ' '.repeat(indent << 1);
-        var str = O.inspect(args);
+        let str = O.inspect(args);
 
         str = O.sanl(str).map(line => {
           return `${indentStr}${line}`;
@@ -2267,7 +2289,8 @@ const O = {
 
         logOrig(str);
       }else{
-        logOrig(...args);
+        const as = indent !== 0 ? [indentStr, ...args] : args;
+        logOrig(...as);
       }
 
       return O.last(args);
@@ -2293,6 +2316,7 @@ const O = {
       indent = i;
     };
 
+    O.log = logFunc;
     global.log = logFunc;
     global.isConsoleOverriden = 1;
   },
@@ -2553,7 +2577,7 @@ const O = {
   },
 
   async req(path){
-    const cache = O.module.cache;
+    const {cache} = O.module;
     const pathOrig = path;
 
     let data, type;
@@ -2592,10 +2616,10 @@ const O = {
       path += '.obj';
       if(path in cache) return cache[path];
     }else{
-      O.error(`Failed to load data for project ${JSON.stringify(O.project)}`);
-      return null;
+      throw new TypeError(`Cannot find ${O.sf(pathOrig)}`);
     }
 
+    const pathMatch = path;
     path = path.split('/');
     path.pop();
 
@@ -2615,21 +2639,47 @@ const O = {
         break;
 
       case 2: // JavaScript
-        data = data
-          .replace(/^const (?:O|debug) .+/gm, '')
-          .replace(/ \= require\(/g, ' \= await require(');
+        data = data.
+          replace(/^const (?:O|debug) = require\(.+\s*/gm, '').
+          replace(/ = require\(/g, ' = await require(');
 
-        const AsyncFunction = (async () => {}).constructor;
         let func = null;
 
+        const constructFunc = () => {
+          return new Function(
+            'window',
+            'document',
+            'Function',
+            'O',
+            'exports',
+            'require',
+            'module',
+            '__filename',
+            '__dirname',
+
+            `return(async()=>{\n${data}\n})();`,
+          );
+        };
+
         try{
-          func = new AsyncFunction('window', 'document', 'Function', 'O', 'require', 'module', 'exports', data);
+          func = constructFunc();
         }catch(err){
+          setTimeout(() => constructFunc());
           console.error(`Syntax error in ${O.sf(pathOrig)}`);
           throw err;
         }
 
-        await func(window, document, Function, O, require, module, module.exports);
+        await func(
+          window,
+          document,
+          Function,
+          O,
+          module.exports,
+          require,
+          module,
+          pathMatch,
+          path.join('/'),
+        );
         break;
     }
 
@@ -2638,7 +2688,7 @@ const O = {
     async function require(newPath){
       var resolvedPath;
 
-      if(/^https?\:\/\//.test(newPath)){
+      if(/^(?:\/|https?\:\/\/|[^\.][\s\S]*\/)/.test(newPath)){
         resolvedPath = newPath;
       }else if(newPath.startsWith('.')){
         var oldPath = path.slice();
@@ -2653,7 +2703,7 @@ const O = {
 
         resolvedPath = oldPath.join('/');
       }else{
-        return null;
+        return O.modulesPolyfill[newPath];
       }
 
       var exportedModule = await O.req(resolvedPath);
@@ -2815,14 +2865,14 @@ const O = {
   */
 
   enhanceRNG(sym){
-    O.noimpl('enhanceRNG');
+    /*O.noimpl('enhanceRNG');
 
-    /*if(sym !== O.symbols.enhanceRNG)
-      throw new TypeError('Function "enhanceRNG" should not be called explicitly');
+    if(sym !== O.symbols.enhanceRNG)
+      throw new TypeError('Function "enhanceRNG" should not be called explicitly');*/
 
     O.enhancedRNG = 1;
     O.randState = O.Buffer.from(O.ca(32, () => Math.random() * 256));
-    O.repeat(10, () => O.random());*/
+    O.repeat(10, () => O.random());
   },
 
   randSeed(seed){
@@ -3076,6 +3126,22 @@ const O = {
   ext(file){ return O.nm.path.parse(file).ext.slice(1); },
 
   /*
+    Modules polyfill
+  */
+
+  modulesPolyfill: (() => {
+    const modules = O.obj();
+
+    modules.path = {
+      join(p1, p2){
+        return p1.split(/[\/\\]/).concat(p2.split(/[\/\\]/)).join('/');
+      },
+    };
+
+    return modules;
+  }),
+
+  /*
     Events
   */
 
@@ -3310,7 +3376,7 @@ const O = {
 
   base64: (() => {
     const encode = data => {
-      const buf = O.Buffer.from(String(data));
+      const buf = O.Buffer.from(data);
 
       let str = '';
       let val = 0;
@@ -3341,8 +3407,6 @@ const O = {
     };
 
     const decode = str => {
-      str = String(str);
-
       const pad = str.match(/\=*$/)[0].length;
       const extraBytes = pad !== 0 ? pad : 0;
       const len = (str.length >> 2) * 3 - extraBytes;
@@ -3406,6 +3470,18 @@ const O = {
 
     return {encode, decode};
   })(),
+
+  // Exit
+
+  exit(...args){
+    if(!O.isNode)
+      throw new TypeError('Only Node.js process can be terminated');
+
+    if(args.length !== 0)
+      log(...args);
+
+    O.proc.exit();
+  },
 
   // Function which does nothing
 

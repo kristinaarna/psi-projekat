@@ -22,8 +22,7 @@ class Program extends SG{
   #lang = null;
   #intp = null;
 
-  constructor(langName, source, maxSize, criticalSize=null){
-    const lang = PL.get(langName);
+  constructor(lang, source, maxSize, criticalSize=null){
     super(lang.graphCtors, lang.graphRefs, maxSize);
 
     this.criticalSize = criticalSize;

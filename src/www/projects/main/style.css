@@ -345,3 +345,7 @@ body{
 .avatar-file-btn{
   display: none;
 }
+
+.lang-choice{
+  margin-bottom: 0px;
+}
