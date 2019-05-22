@@ -1,5 +1,11 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+const O = require('../omikron');
+
+const cwd = __dirname;
+
 const textures = {
   hud: './textures/hud.png',
   sky: './textures/sky.png',
@@ -31,7 +37,7 @@ class Material{
         res(tex);
       };
 
-      img.src = O.urlTime(`/projects/${O.project}/${pth}`);
+      img.src = O.urlTime(path.join(cwd, pth));
     });
   }
 };

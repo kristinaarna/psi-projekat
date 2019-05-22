@@ -45,9 +45,10 @@
       }
     },
     "sandbox": {
-      "buttons": {
-        "start": "Покрени"
-      }
+      "script": "Скрипта",
+      "input": "Улаз",
+      "output": "Излаз",
+      "simulator": "Симулатор"
     },
     "competition": {
       "title": "Назив такмичења",

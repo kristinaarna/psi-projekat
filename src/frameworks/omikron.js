@@ -2215,7 +2215,7 @@ const O = {
         O.project = project;
 
         if(!O.projectTest(O.project))
-        return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
+          return O.error(`Illegal project name ${JSON.stringify(O.ascii(O.project))}".`);
 
         // TODO: fix this
         O.req(`/projects/${O.project}/main`)//.catch(O.error);
@@ -3134,7 +3134,9 @@ const O = {
 
     modules.path = {
       join(p1, p2){
-        return p1.split(/[\/\\]/).concat(p2.split(/[\/\\]/)).join('/');
+        return p1.split(/[\/\\]/).
+          concat(p2.split(/[\/\\]/)).
+          join('/').replace(/\/+/g, '/');
       },
     };
 

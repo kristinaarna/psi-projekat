@@ -18,7 +18,7 @@ CREATE TABLE Post (
   postedBy             INTEGER NOT NULL,
   content              text NOT NULL,
   creationDate         BIGINT NOT NULL,
-  PRIMARY KEY (idPost, postedBy),
+  PRIMARY KEY (idPost),
   FOREIGN KEY (postedBy) REFERENCES User (idUser)
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE Competition (
   idGoal               INTEGER NOT NULL,
   maxUsers             INTEGER NOT NULL,
   points               INTEGER NOT NULL,
-  PRIMARY KEY (idComp, createdBy, idGoal),
+  PRIMARY KEY (idComp),
   FOREIGN KEY (createdBy) REFERENCES User (idUser),
   FOREIGN KEY (idGoal) REFERENCES Goal (idGoal)
 );

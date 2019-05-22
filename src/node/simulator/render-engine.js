@@ -14,6 +14,8 @@ const Vector = require('./vector');
 const vsSrc = require('./shaders/vs');
 const fsSrc = require('./shaders/fs');
 
+const DISPLAY_FPS = 0;
+
 const FOV = O.pi / 3;
 const NEAR = 1e-3;
 const FAR = 1e3;
@@ -21,19 +23,30 @@ const CURSOR_SPEED = 3;
 const SUNLIGHT_DIR = new Vector(0, -100, 50).norm();
 
 let TICK_TIME = 1e3;
+
+// TODO: remove this
 O.ael('keydown', a => {if(a.code === 'Enter')TICK_TIME=prompt('',TICK_TIME)|0});
+
+// TODO: remove O.z from all scripts
 
 const {min, max, abs, sin, cos} = Math;
 
 class RenderEngine{
-  constructor(canvas){
-    this.canvas = canvas;
+  constructor(div, width, height){
+    this.div = div;
 
-    const w = this.w = canvas.width;
-    const h = this.h = canvas.height;
+    const w = this.w = width;
+    const h = this.h = height;
     [this.wh, this.hh] = [w, h].map(a => a / 2);
 
-    const gl = this.gl = canvas.getContext('webgl2', {
+    const canvas3D = this.canvas3D = this.createCanvas();
+    const canvas2D = this.canvas2D = this.createCanvas();
+
+    const g = this.g = canvas2D.getContext('2d');
+    g.textBaseline = 'top';
+    g.textAlign = 'left';
+
+    const gl = this.gl = canvas3D.getContext('webgl2', {
       alpha: false,
       preserveDrawingBuffer: true,
     });
@@ -169,9 +182,9 @@ class RenderEngine{
   }
 
   aels(){
-    const {cam} = this;
+    const {div, cam} = this;
 
-    O.ael('mousedown', evt => {
+    O.ael(div, 'mousedown', evt => {
       switch(evt.button){
         case 0:
           this.curAction = 2;
@@ -180,7 +193,7 @@ class RenderEngine{
         case 1:
           O.pd(evt);
           if(this.cursorLocked) O.doc.exitPointerLock();
-          else this.canvas.requestPointerLock();
+          else this.div.requestPointerLock();
           break;
 
         case 2:
@@ -189,19 +202,20 @@ class RenderEngine{
       }
     });
 
-    O.ael('mousemove', evt => {
+    O.ael(div, 'mousemove', evt => {
       if(!this.cursorLocked) return;
 
       cam.rx = max(min(cam.rx + evt.movementY * CURSOR_SPEED / this.h, O.pih), -O.pih);
       cam.ry = (cam.ry + evt.movementX * CURSOR_SPEED / this.w) % O.pi2;
     });
 
-    O.ael('contextmenu', evt => {
+    O.ael(div, 'contextmenu', evt => {
       O.pd(evt);
     });
 
     O.ael('keydown', evt => {
       if(!this.cursorLocked) return;
+      O.pd(evt);
 
       switch(evt.code){
         case 'KeyW': this.dir |= 1; break;
@@ -215,6 +229,7 @@ class RenderEngine{
 
     O.ael('keyup', evt => {
       if(!this.cursorLocked) return;
+      O.pd(evt);
 
       switch(evt.code){
         case 'KeyW': this.dir &= ~1; break;
@@ -232,8 +247,38 @@ class RenderEngine{
     });
   }
 
+  createCanvas(){
+    const canvas = O.ce(this.div, 'canvas');
+
+    canvas.width = this.w;
+    canvas.height = this.h;
+
+    return canvas;
+  }
+
   render(){
-    const {gl, uniforms, cam, dir, camRot, objRot, grid} = this;
+    const {w, h, wh, hh, g, gl, uniforms, cam, dir, camRot, objRot, grid} = this;
+
+    {
+      g.clearRect(0, 0, w, h);
+
+      if(DISPLAY_FPS){
+        let fps = 1e3 / O.z + .5 | 0;
+        if(fps > 55) fps = 60;
+        g.font = '16px arial';
+        g.fillStyle = 'black';
+        g.fillText(`FPS: ${fps}`, 5, 5);
+      }
+
+      const s = 10;
+      g.strokeStyle = 'white';
+      g.beginPath();
+      g.moveTo(wh, hh - s);
+      g.lineTo(wh, hh + s);
+      g.moveTo(wh - s, hh);
+      g.lineTo(wh + s, hh);
+      g.stroke();
+    }
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
