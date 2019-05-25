@@ -2,8 +2,8 @@
 
 const LS = require('../../strings');
 const Element = require('../element');
-const Tab = require('./tab');
 const TabStrip = require('./tab-strip');
+const Tab = require('./tab');
 const TabContent = require('./tab-content');
 
 class Frame extends Element.Div{
@@ -18,15 +18,8 @@ class Frame extends Element.Div{
     for(const [name, label] of tabs)
       this.createTab(name, label);
 
-    this.tabStrip.on('select', (tab, evt) => {
-      const {tabs, contents} = this;
-
-      for(const tab of tabs) tab.unselect();
-      for(const content of contents) content.unselect();
-
-      this.selectTab(tab.name);
-
-      this.emit('select', tab, evt);
+    this.tabStrip.on('click', (tab, evt) => {
+      this.selectTab(tab.name, evt);
     });
   }
 
@@ -34,6 +27,15 @@ class Frame extends Element.Div{
     this.tabs.push(new Tab(this.tabStrip, name, label));
     this.contents.push(new TabContent(this));
     if(this.tabs.length === 1) this.selectTab(name);
+  }
+
+  getSelectedTab(){
+    if(this.tabs.length === 0) return null;
+    return this.tabs.find(tab => tab.selected);
+  }
+
+  getSelectedIndex(){
+    return this.tabs.findIndex(tab => tab.selected);
   }
 
   getTab(name){
@@ -44,29 +46,30 @@ class Frame extends Element.Div{
     return this.tabs.findIndex(tab => tab.name === name);
   }
 
-  selectTab(name){
-    this.selectTabByIndex(this.getTabIndex(name));
+  selectTab(name, evt=null){
+    this.selectTabByIndex(this.getTabIndex(name, evt));
   }
 
-  unselectTab(name){
-    this.unselectTabByIndex(this.getTabIndex(name));
-  }
+  selectTabByIndex(index, evt=null){
+    const {tabs, contents} = this;
+    const indexPrev = this.getSelectedIndex();
 
-  selectTabByIndex(index){
-    this.tabs[index].select();
-    this.contents[index].select();
-  }
+    if(indexPrev !== -1){
+      this.emit('unselect', tabs[indexPrev], evt);
+      tabs[indexPrev].unselect();
+      contents[indexPrev].unselect();
+    }
 
-  unselectTabByIndex(index){
-    this.tabs[index].unselect();
-    this.contents[index].unselect();
+    this.emit('select', tabs[index], evt);
+    tabs[index].select();
+    contents[index].select();
   }
 
   css(){ return 'frame'; }
 }
 
 module.exports = Object.assign(Frame, {
-  Tab,
   TabStrip,
+  Tab,
   TabContent,
 });

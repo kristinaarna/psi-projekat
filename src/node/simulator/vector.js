@@ -5,7 +5,7 @@ const {abs, sqrt, sin, cos} = Math;
 class Vector extends O.EventEmitter{
   static aux = Vector.zero();
 
-  constructor(x, y, z){
+  constructor(x=0, y=0, z=0){
     super();
 
     this.x = x;

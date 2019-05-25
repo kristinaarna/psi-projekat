@@ -67,7 +67,7 @@ async function exec(query, args=null){
       if(data.error !== null) return rej(data.error);
 
       res(data.data);
-    })
+    });
 
     proc.on('error', rej);
 

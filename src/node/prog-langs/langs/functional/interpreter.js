@@ -445,7 +445,7 @@ class Write extends NativeInvocation{
 
     const val = eargs.get(0);
     const bit = val !== this.intp.zero & 1;
-    this.g.stdout.write(Buffer.from([bit]), 1);
+    this.g.stdout.write(O.Buffer.from([bit]), 1);
 
     th.ret(val);
   }

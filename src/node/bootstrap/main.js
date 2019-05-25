@@ -13,7 +13,7 @@ function main(){
   switch(args[0]){
     case 'init': load('init'); break;
     case 'start': load('node'); break;
-    case 'test': load('tests'); break;
+    case 'test': load('test'); break;
     case 'find': load('syntax-finder'); break;
     default: err(`Invalid argument ${O.sf(arg)}`); break;
   }

@@ -66,7 +66,7 @@ class ProgrammingLanguage{
       return cache[lang];
 
     const dir = path.join(langsDir, lang);
-    const syntax = Syntax.fromDir(path.join(dir, 'syntax'));
+    const syntax = Syntax.fromStr(await O.readFile(path.join(dir, 'syntax/script.txt')));
     const Parser = require(path.join(dir, 'parser'));
     const Compiler = require(path.join(dir, 'compiler'));
     const Interpreter = require(path.join(dir, 'interpreter'));

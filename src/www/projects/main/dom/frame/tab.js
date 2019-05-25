@@ -12,7 +12,8 @@ class Tab extends Selectable{
     this.val = label;
 
     this.ael('click', evt => {
-      this.parent.emit('select', this, evt);
+      if(this.selected) return;
+      this.parent.emit('click', this, evt);
     });
   }
 

@@ -3,19 +3,16 @@ uniform mat3 camRot;
 
 uniform mat3 objRotation;
 uniform mat4 projection;
-uniform float scale, k;
+uniform float scale;
 
-attribute vec3 v1, v2;
-attribute vec3 n1, n2;
+attribute vec3 v;
+attribute vec3 n;
 attribute vec2 tex;
 
 varying vec3 nFrag;
 varying vec2 texFrag;
 
 void main(){
-  vec3 v = mix(v1, v2, k);
-  vec3 n = mix(n1, n2, k);
-
   nFrag = objRotation * n;
   texFrag = tex;
 

@@ -22,6 +22,10 @@ class Shape{
     shapes.get(model).add(this);
   }
 
+  static reset(){
+    shapes.clear();
+  }
+
   remove(){
     const {model} = this;
     const set = shapes.get(model);
@@ -31,6 +35,6 @@ class Shape{
   }
 };
 
-Shape.shapes = shapes;
-
-module.exports = Shape;
+module.exports = Object.assign(Shape, {
+  shapes,
+});

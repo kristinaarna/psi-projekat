@@ -16,6 +16,7 @@ class Tile extends Vector{
   get len(){ return this.objs.length; }
   get fst(){ return this.len !== 0 ? this.objs[0] : null; }
   get empty(){ return this.len === 0; }
+  get nempty(){ return this.len !== 0; }
   get sngl(){ return this.len === 1; }
   get mult(){ return this.len > 1; }
 

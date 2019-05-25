@@ -13,6 +13,9 @@ const objs = new Set();
 class Object extends Ray{
   static objs = objs;
 
+  static model = null;
+  static material = null;
+
   static is = Object.traits([]);
   is = this.constructor.is;
 
@@ -36,6 +39,10 @@ class Object extends Ray{
 
     objs.add(this);
     tile.addObj(this);
+  }
+
+  static reset(){
+    objs.clear();
   }
 
   static traits(arr){
@@ -100,8 +107,13 @@ class Object extends Ray{
     this.rot(0, (dir + 2) * O.pih, 0);
   }
 
-  addShape(shape){
+  addShape(shape=null){
     const {shapes} = this;
+
+    if(shape === null){
+      const ctor = this.constructor;
+      shape = new Shape(Model[ctor.model], Material[ctor.material]);
+    }
 
     shape.obj = this;
     shape.index = shapes.length;
@@ -134,21 +146,29 @@ class Object extends Ray{
 
 class Dirt extends Object{
   static is = Object.traits(['occupying', 'opaque', 'blocking', 'ground']);
+  static model = 'cubeuv';
+  static material = 'dirt';
 
   constructor(tile){
     super(tile);
 
-    this.addShape(new Shape(Model.cube, Material.dirt));
+    this.addShape();
   }
 };
 
-class Stone extends Object{
-  static is = Object.traits(['occupying', 'opaque', 'blocking', 'ground', 'pushable']);
+class Rock extends Object{
+  static is = Object.traits(['occupying', 'ground', 'pushable']);
+  static model = 'rock';
+  static material = 'rock';
 
   constructor(tile){
     super(tile);
 
-    this.addShape(new Shape(Model.cube, Material.stone));
+    this.addShape();
+
+    const angle = O.randf(O.pi2);
+    this.rot(0, angle, 0);
+    this.prev.rot(0, angle, 0);
   }
 
   onUpdate(){
@@ -161,16 +181,15 @@ class Stone extends Object{
   }
 };
 
-class Man extends Object{
+class Bot extends Object{
   static is = Object.traits(['occupying']);
-  static num = 0;
+  static model = 'bot';
+  static material = 'bot';
 
   constructor(tile){
     super(tile);
 
-    this.addShape(new Shape(Model.test1, Material.man));
-
-    Man.num++;
+    this.addShape();
   }
 
   onTick(){
@@ -181,28 +200,27 @@ class Man extends Object{
       return;
     }
 
-    if(Man.num !== 1 && O.rand(50) === 0){
-      this.remove();
-      return;
-    }
-
-    if(grid.getv(Vector.navv(this, dir)).empty && !grid.getv(Vector.navv(this, dir).nav(4)).empty){
-      new Dirt(this.get(0, -1, -1).purge());
-      if(O.rand(50) === 0) new Man(this.get(0, 0, -1).purge());
+    if(O.rand(4) && grid.getv(Vector.navv(this, dir)).empty && !grid.getv(Vector.navv(this, dir).nav(4)).empty){
       this.nav(dir);
     }else{
       this.dir = dir + (O.rand(2) ? 1 : -1) & 3;
     }
   }
-
-  remove(){
-    super.remove();
-    Man.num--;
-  }
 };
 
-Object.Dirt = Dirt;
-Object.Stone = Stone;
-Object.Man = Man;
+const ctorsArr = [
+  Dirt,
+  Rock,
+  Bot,
+];
 
-module.exports = Object;
+const ctors = O.obj();
+for(const ctor of ctorsArr)
+  ctors[ctor.name] = ctor;
+
+module.exports = window.Object.assign(Object, {
+  objs,
+  ctors,
+  ctorsArr,
+  ctorsNum: ctorsArr.length,
+});

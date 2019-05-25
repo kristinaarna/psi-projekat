@@ -1714,7 +1714,7 @@ class Buffer extends Uint8Array{
     this[offset + 3] = val;
   }
 
-  toString(encoding){
+  toString(encoding='utf8'){
     switch(encoding){
       case 'hex':
         return Array.from(this).map(a => a.toString(16).padStart(2, '0')).join('');
@@ -1784,6 +1784,23 @@ class IO{
     return buf;
   }
 
+  static async unlocka(buf, sameBuf=0){
+    if(!sameBuf) buf = O.Buffer.from(buf);
+    const err = () => { throw new TypeError('Invalid checksum'); };
+
+    const len = buf.length;
+    if(len < 32) err();
+
+    const cs = O.Buffer.from(buf.slice(len - 32));
+
+    buf = O.Buffer.from(buf.slice(0, len - 32));
+    await IO.xora(buf, cs, 1);
+
+    if(!O.sha256(buf).equals(cs)) err();
+
+    return buf;
+  }
+
   static xor(buf, hash, sameBuf=0){
     if(!sameBuf) buf = O.Buffer.from(buf);
     const len = buf.length;
@@ -1794,6 +1811,28 @@ class IO{
       if(j === 32){
         hash = O.sha256(hash);
         j = 0;
+      }
+    }
+
+    return buf;
+  }
+
+  static async xora(buf, hash, sameBuf=0){
+    if(!sameBuf) buf = O.Buffer.from(buf);
+    const len = buf.length;
+    let cnt = 0;
+
+    for(let i = 0, j = 0; i !== len; i++, j++){
+      buf[i] ^= hash[j];
+
+      if(j === 32){
+        hash = O.sha256(hash);
+        j = 0;
+      }
+
+      if(++cnt === 1e5){
+        await O.waita(16);
+        cnt = 0;
       }
     }
 
@@ -1845,6 +1884,9 @@ class IO{
 };
 
 class Serializer extends IO{
+  static #abuf = new ArrayBuffer(8);
+  static #view = new DataView(this.#abuf);
+
   constructor(buf, checksum=0){
     super(buf, checksum);
   }
@@ -1932,6 +1974,36 @@ class Serializer extends IO{
 
   readUint(){
     return this.readInt(0);
+  }
+
+  writeFloat(f){
+    const view = this.constructor.#view;
+    view.setFloat32(0, f, 1);
+    for(let i = 0; i !== 4; i++)
+      this.write(view.getUint8(i), 255);
+    return this;
+  }
+
+  readFloat(){
+    const view = this.constructor.#view;
+    for(let i = 0; i !== 4; i++)
+      view.setUint8(i, this.read(255));
+    return view.getFloat32(0, 1);
+  }
+
+  writeDouble(f){
+    const view = this.constructor.#view;
+    view.setFloat64(0, f, 1);
+    for(let i = 0; i !== 8; i++)
+      this.write(view.getUint8(i), 255);
+    return this;
+  }
+
+  readDouble(){
+    const view = this.constructor.#view;
+    for(let i = 0; i !== 8; i++)
+      view.setUint8(i, this.read(255));
+    return view.getFloat64(0, 1);
   }
 
   writeBuf(buf){
@@ -2576,11 +2648,17 @@ const O = {
     O.rf(`/projects/${O.project}/${file}`, isBinary, cb);
   },
 
+  async readFile(file){
+    if(O.isBrowser) return O.rfAsync(file);
+    return O.rfs(file, 1);
+  },
+
   async req(path){
     const {cache} = O.module;
     const pathOrig = path;
 
-    let data, type;
+    let type = 0;
+    let data = null;
 
     if(path in cache) return cache[path];
 
@@ -2599,21 +2677,16 @@ const O = {
       path += '.json';
       if(path in cache) return cache[path];
     }else if((data = await O.rfAsync(`${path}.txt`)) !== null){
-      type = 0;
       path += '.txt';
       if(path in cache) return cache[path];
     }else if((data = await O.rfAsync(`${path}.md`)) !== null){
-      type = 0;
       path += '.md';
       if(path in cache) return cache[path];
     }else if((data = await O.rfAsync(`${path}.glsl`)) !== null){
-      type = 0;
       path += '.glsl';
       if(path in cache) return cache[path];
-    }else if((data = await O.rfAsync(`${path}.obj`)) !== null){
-      // TODO: remove this
-      type = 0;
-      path += '.obj';
+    }else if((data = await O.rfAsync(`${path}.hex`, 1)) !== null){
+      path += '.hex';
       if(path in cache) return cache[path];
     }else{
       throw new TypeError(`Cannot find ${O.sf(pathOrig)}`);
@@ -3020,9 +3093,20 @@ const O = {
     return obj;
   },
 
+  await(func){
+    return new Promise(res => {
+      const test = async () => {
+        if(await func()) return res();
+        setTimeout(test);
+      };
+
+      test();
+    });
+  },
+
   while(func){
     return new Promise(res => {
-      var test = async () => {
+      const test = async () => {
         if(await func()) return setTimeout(test);
         res();
       };
@@ -3130,13 +3214,17 @@ const O = {
   */
 
   modulesPolyfill: (() => {
-    const modules = O.obj();
+    const modules = {
+      path: {
+        normalize(p){
+          return p.replace(/[\\]/g, '/');
+        },
 
-    modules.path = {
-      join(p1, p2){
-        return p1.split(/[\/\\]/).
-          concat(p2.split(/[\/\\]/)).
-          join('/').replace(/\/+/g, '/');
+        join(p1, p2){
+          return p1.split(/[\/\\]/).
+            concat(p2.split(/[\/\\]/)).
+            join('/').replace(/\/+/g, '/');
+        },
       },
     };
 
@@ -3154,7 +3242,7 @@ const O = {
       target = window;
     }
 
-    return target.addEventListener(type, func);
+    return target.addEventListener(type, func, {passive: 0});
   },
 
   rel(target, type, func=null){
@@ -3377,7 +3465,7 @@ const O = {
   })(),
 
   base64: (() => {
-    const encode = data => {
+    const encode = (data, mode=0) => {
       const buf = O.Buffer.from(data);
 
       let str = '';
@@ -3386,18 +3474,18 @@ const O = {
       buf.forEach((byte, i) => {
         switch(i % 3){
           case 0:
-            str += char(byte >> 2);
+            str += char(byte >> 2, mode);
             val = (byte & 3) << 4;
             break;
 
           case 1:
-            str += char((byte >> 4) | val);
+            str += char((byte >> 4) | val, mode);
             val = (byte & 15) << 2;
             break;
 
           case 2:
-            str += char((byte >> 6) | val);
-            str += char(byte & 63);
+            str += char((byte >> 6) | val, mode);
+            str += char(byte & 63, mode);
             break;
         }
       });
@@ -3408,7 +3496,7 @@ const O = {
       return str;
     };
 
-    const decode = str => {
+    const decode = (str, mode=0) => {
       const pad = str.match(/\=*$/)[0].length;
       const extraBytes = pad !== 0 ? pad : 0;
       const len = (str.length >> 2) * 3 - extraBytes;
@@ -3424,19 +3512,19 @@ const O = {
 
         switch(i % 3){
           case 0:
-            byte = ord(str[j++]) << 2;
-            val = ord(str[j++]);
+            byte = ord(str[j++], mode) << 2;
+            val = ord(str[j++], mode);
             byte |= val >> 4;
             break;
 
           case 1:
             byte = val << 4;
-            val = ord(str[j++]);
+            val = ord(str[j++], mode);
             byte |= val >> 2;
             break;
 
           case 2:
-            byte = (val << 6) | ord(str[j++]);
+            byte = (val << 6) | ord(str[j++], mode);
             break;
         }
 
@@ -3446,9 +3534,9 @@ const O = {
       return buf;
     };
 
-    const char = ord => {
-      if(ord === 62) return '+';
-      if(ord === 63) return '/';
+    const char = (ord, mode) => {
+      if(ord === 62) return mode ? '-' : '+';
+      if(ord === 63) return mode ? '_' : '/';
 
       return O.sfcc(ord + (
         ord < 26 ? 65 :
@@ -3458,8 +3546,8 @@ const O = {
     };
 
     const ord = char => {
-      if(char === '+') return 62;
-      if(char === '/') return 63;
+      if(char === (mode ? '-' : '+')) return 62;
+      if(char === (mode ? '_' : '/')) return 63;
 
       const cc = O.cc(char);
 
@@ -3476,8 +3564,8 @@ const O = {
   // Exit
 
   exit(...args){
-    if(!O.isNode)
-      throw new TypeError('Only Node.js process can be terminated');
+    if(!(O.isNode || O.isElectron))
+      throw new TypeError('Only Node.js or Electron process can be terminated');
 
     if(args.length !== 0)
       log(...args);

@@ -1,6 +1,7 @@
 'use strict';
 
-const langsList = require('../../../../node/programming-language/langs-list');
+const PL = require('/node/prog-langs/programming-language');
+const langsList = require('/node/prog-langs/langs-list');
 const LS = require('../../strings');
 const Element = require('../element');
 const TextEditor = require('../text-editor');
@@ -20,6 +21,10 @@ class LanguageChoice extends Element.InputDropdown{
 
       this.addOpt(name, name, name === DEFAULT_LANG);
     }
+  }
+
+  getLang(){
+    return PL.get(this.val);
   }
 
   css(){ return 'lang-choice'; }

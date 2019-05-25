@@ -531,6 +531,9 @@ class TextEditor extends Element.InputTextarea{
     }
   }
 
+  enable(){ this.elem.disabled = 0; }
+  disable(){ this.elem.disabled = 1; }
+
   focus(){
     const {ta} = this;
 

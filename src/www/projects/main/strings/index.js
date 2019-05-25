@@ -23,4 +23,6 @@ const langs = require('./languages');
 LS.langs = langs;
 LS.lang = LANGUAGE;
 
+O.glob.LS = LS;
+
 module.exports = LS;

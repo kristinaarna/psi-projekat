@@ -16,6 +16,8 @@ const modals = require('./modals');
 */
 
 class DOM extends Element{
+  #page = null;
+
   constructor(main, modal, init=1){
     super();
 
@@ -29,7 +31,6 @@ class DOM extends Element{
     // Elements
     this.navbar = null;
     this.pageContent = null;
-    this.page = null;
     this.modalInner = null;
 
     this.loading = 0;
@@ -57,6 +58,17 @@ class DOM extends Element{
       evt.stopPropagation();
       this.reload();
     });
+  }
+
+  get page(){
+    return this.#page;
+  }
+
+  set page(page){
+    if(this.#page !== null)
+      this.#page.emit('remove');
+
+    this.#page = page;
   }
 
   reload(){
@@ -186,6 +198,7 @@ class DOM extends Element{
     const len = path.length;
 
     this.pageContent.clear();
+    this.page = null;
 
     if(len === 0){
       await this.createHomePage();

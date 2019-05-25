@@ -10,20 +10,21 @@ const textures = {
   hud: './textures/hud.png',
   sky: './textures/sky.png',
   dirt: './textures/dirt.png',
-  stone: './textures/stone.png',
-  man: './textures/man.png',
+  rock: './textures/rock.png',
+  bot: './textures/bot.png',
 };
 
 class Material{
-  constructor(tex){
+  constructor(img, tex){
+    this.img = img;
     this.tex = tex;
   }
 
   static async init(genTexFunc, procTexFunc){
     for(const texture of O.keys(textures)){
       const glTex = genTexFunc();
-      const tex = await Material.loadTexture(textures[texture], glTex, procTexFunc);
-      Material[texture] = new Material(tex);
+      const [img, tex] = await Material.loadTexture(textures[texture], glTex, procTexFunc);
+      Material[texture] = new Material(img, tex);
     }
   }
 
@@ -34,7 +35,7 @@ class Material{
 
       img.onload = () => {
         procTexFunc(tex, img);
-        res(tex);
+        res([img, tex]);
       };
 
       img.src = O.urlTime(path.join(cwd, pth));

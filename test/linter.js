@@ -31,7 +31,8 @@ const allExts = textExts.concat([
   'zip',
   'docx',
   'erwin',
-  'blend',
+  'obj',
+  'hex',
 ]);
 
 const latLower = O.ca(26, i => O.sfcc(i + O.cc('a'))).join('');
