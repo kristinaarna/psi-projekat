@@ -273,10 +273,6 @@ body{
 }
 
 .page .text-editor{
-  height: 655px;
-  display: block;
-  margin-top: 0px;
-  border-top-left-radius: 0;
   background: #6ff;
 }
 
@@ -392,6 +388,12 @@ body{
 .tab-content:not(.selected){
   display: none;
   pointer-events: none;
+}
+
+.tab-content .region{
+  margin-top: 0px;
+  height: 655px;
+  border-top-left-radius: 0;
 }
 
 .canvas-container{

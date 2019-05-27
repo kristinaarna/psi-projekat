@@ -8,10 +8,10 @@ const SF = require('../../stack-frame');
 const cgs = require('../../common-graph-nodes');
 const InterpreterBase = require('../../interpreter-base');
 
-const IDENTS_NUM = 9;
+const IDENTS_NUM = 10;
 
 class Interpreter extends InterpreterBase{
-  static ptrsNum = this.keys(['globInv']);
+  static ptrsNum = this.keys(['globInv', 'simulator']);
   static identsNum = IDENTS_NUM;
 
   constructor(g, script){
@@ -19,6 +19,7 @@ class Interpreter extends InterpreterBase{
     if(g.dsr) return;
 
     this.globInv = null;
+    this.simulator = new ctorsObj.Simulator(g);
   }
 
   get zero(){
@@ -84,6 +85,10 @@ class Invocation extends SF{
 
     this.parent = parent;
     this.idents = idents;
+  }
+
+  static cmp(v1, v2){
+    return 1;
   }
 
   invoke(args){ O.virtual('invoke'); }
@@ -238,6 +243,11 @@ class InvocationWithArguments extends Invocation{
 }
 
 class NativeInvocation extends InvocationWithArguments{
+  constructor(g, parent=null, idents=null, args=null){
+    super(g, parent, idents, args);
+    if(g.dsr) return;
+  }
+
   invoke(args){
     if(args !== null) args = args.list;
     return new this.constructor(this.g, this.parent, null, args);
@@ -279,7 +289,13 @@ class Equality extends NativeInvocation{
 
     const {args, eargs} = this;
 
-    const bit = eargs.get(0) === eargs.get(1) & 1;
+    const v1 = eargs.get(0);
+    const v2 = eargs.get(1);
+
+    const ctor1 = v1.constructor;
+    const ctor2 = v2.constructor;
+
+    const bit = (ctor1 === ctor2 && ctor1.cmp(ctor1, ctor2)) & 1;
     const val = this.intp.globInv.getIdentByIndex(bit);
 
     th.ret(val);
@@ -365,6 +381,10 @@ class UserlandFunction extends NativeInvocation{
     this.elem = elem;
   }
 
+  static cmp(v1, v2){
+    return v1 === v2;
+  }
+
   invoke(args){
     let {elem} = this;
     if(elem !== null) elem = List.from(elem.list);
@@ -427,7 +447,10 @@ class Read extends NativeInvocation{
 
     const {args, eargs} = this;
 
-    const bit = this.g.stdin.read(1)[0] & 1;
+    if(this.nval) return th.call(new cgs.Read(this.g, 1));
+    const {buf} = this.gval;
+
+    const bit = buf[0] & 1;
     const val = this.intp.globInv.getIdentByIndex(bit);
 
     th.ret(val);
@@ -497,6 +520,13 @@ module.exports = Object.assign(Interpreter, {
   ctorsArr,
   ctorsObj,
 });
+
+const simulator = require('./simulator');
+
+for(const ctor of simulator.ctorsArr){
+  ctorsArr.push(ctor);
+  ctorsObj[ctor.name] = ctor;
+}
 
 const Parser = require('./parser');
 const Compiler = require('./compiler');

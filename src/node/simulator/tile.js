@@ -19,6 +19,8 @@ class Tile extends Vector{
   get nempty(){ return this.len !== 0; }
   get sngl(){ return this.len === 1; }
   get mult(){ return this.len > 1; }
+  get free(){ return !this.has.occupying; }
+  get nfree(){ return this.has.occupying; }
 
   update(){
     this.grid.updatev(this);

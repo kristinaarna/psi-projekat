@@ -84,7 +84,7 @@ class DiscreteRay extends Vector{
         if(this.dy < 0) this.dy++;
         else if(this.dy > 1) this.dy--;
 
-        this.dir = az ? 2 : 0;
+        this.dir = az ? 0 : 2;
       }
     }else{
       if(apy * d > apz * h){
@@ -101,7 +101,6 @@ class DiscreteRay extends Vector{
         if(this.dz < 0) this.dz++;
         else if(this.dz > 1) this.dz--;
 
-        // TODO: thid doesn't work. Investigate this. It should be "ay ? 5 : 4"
         this.dir = ay ? 4 : 5;
       }else{
         // TODO: reduce duplication
@@ -118,7 +117,7 @@ class DiscreteRay extends Vector{
         if(this.dy < 0) this.dy++;
         else if(this.dy > 1) this.dy--;
 
-        this.dir = az ? 2 : 0;
+        this.dir = az ? 0 : 2;
       }
     }
 

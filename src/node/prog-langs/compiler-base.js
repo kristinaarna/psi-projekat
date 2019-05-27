@@ -58,7 +58,7 @@ class CompileDef extends Compile{
 
     const compiled = func !== null ? func.call(compiler, def, th) : null;
     if(compiled !== null) compiled.srcPos = def.index;
-    th.ret(compiled);
+    if(th.sf === this) th.ret(compiled);
   }
 }
 

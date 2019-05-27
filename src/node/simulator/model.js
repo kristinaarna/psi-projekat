@@ -10,6 +10,8 @@ const dd = 1e-3;
 
 const models = [
   'rock',
+  'tree',
+  'animal',
   'bot',
 ];
 
@@ -93,14 +95,14 @@ class Cuboid extends Model{
       3, 2, 3, 1, 4, 2, 4, 1, // Back
     ].map((a, b) => a * (b & 1 ? sy : sx));
 
-    const inds = new Uint16Array([
+    const inds = [
       0, 1, 2, 1, 2, 3, // Top
       4, 5, 6, 5, 6, 7, // Bottom
       8, 9, 10, 9, 10, 11, // Left
       12, 13, 14, 13, 14, 15, // Right
       16, 17, 18, 17, 18, 19, // Front
       20, 21, 22, 21, 22, 23, // Back
-    ]);
+    ];
 
     for(const i of inds){
       let k;

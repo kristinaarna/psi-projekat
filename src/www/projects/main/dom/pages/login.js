@@ -17,15 +17,6 @@ class Login extends Page{
       ['InputPass', 'pass', 'pass'],
     ];
 
-    O.ael('keydown', e => {
-      if(e.code === 'F4'){
-        O.pd(e);
-        const fs = form.fields;
-        fs.nick.val = 'a';
-        fs.pass.val = '123456xX';
-      }
-    });
-
     this.fields = fields.map(([ctorName, fieldName, labelName]) => {
       const ctor = Element[ctorName];
       const label = LS.labels.forms.fields[labelName];

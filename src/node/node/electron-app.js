@@ -22,7 +22,7 @@ function main(){
   ipc.on('info', (evt, args) => console.info.apply(null, args));
   ipc.on('error', (evt, args) => console.error.apply(null, args));
   ipc.on('logRaw', (evt, data) => logRaw(data));
-  ipc.on('getArgs', (evt, data) => evt.sender.send('args', process.argv.slice(3)));
+  ipc.on('getArgs', (evt, data) => evt.sender.send('args', args));
 
   const win = new electron.BrowserWindow({
     width: size,

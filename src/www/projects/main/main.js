@@ -35,7 +35,6 @@ let dom = null;
 
 hasModules = 1;
 
-// This is the main function
 async function main(){
   // Ensure that CSS and all modules are loaded
   await O.while(() => !(hasCss && hasModules));

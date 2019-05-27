@@ -76,7 +76,7 @@ class RenderEngine extends O.EventEmitter{
     this.objRot = Matrix.ident();
 
     O.enhancedRNG = 0;
-    this.grid = new Grid();
+    this.grid = new Grid(this);
 
     this.renderBound = this.render.bind(this);
 
@@ -182,19 +182,19 @@ class RenderEngine extends O.EventEmitter{
 
   initGrid(){
     const {grid} = this;
+    const cs = Object.ctors;
 
     const n = 20;
     O.repeat(2, y => {
       O.repeat(n, z => O.repeat(n, x => {
         const d = grid.get(x, y, z);
 
-        if(!y) return new Object.ctors.Dirt(d);
-        if((x || z) && O.rand(40) === 0) new Object.ctors.Rock(d);
+        if(!y) return new cs.Dirt(d);
+        if((x || z) && O.rand(40) === 0) new cs.Rock(d);
       }));
     });
 
-    new Object.ctors.Bot(grid.get(10, 1, 10).purge());
-    new Object.ctors.Bot(grid.get(10, 2, 10).purge());
+    new cs.Bot(grid.get(10, 1, 10).purge());
   }
 
   aels(){
@@ -624,7 +624,7 @@ class RenderEngine extends O.EventEmitter{
     renderTargetTile: if(this.hudVisible && !this.inventoryVisible){
       // TODO: optimize this
       const ray = new DiscreteRay(-cam.x, -cam.y, -cam.z, ...new Vector(0, 0, 1).rot(cam.rx, O.pi - cam.ry, 0));
-      let d = grid.trace(ray, 20, 1, 1, 1);
+      let d = grid.trace(ray, 20, 1, 1);
       if(d === null) break renderTargetTile;
 
       const {curAction} = this;

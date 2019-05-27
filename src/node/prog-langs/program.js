@@ -38,6 +38,7 @@ class Program extends SG{
     const script = new cgs.Script(this, srcStr, fileName);
     this.#intp = new lang.Interpreter(this, script).persist();
 
+    this.calledGC = 0;
     this.checkSize();
   }
 
@@ -64,8 +65,11 @@ class Program extends SG{
   }
 
   checkSize(){
+    this.calledGC = 0;
+
     const max = this.criticalSize;
     if(max === null || this.size <= max) return;
+    this.calledGC = 1;
 
     const {size} = this;
     if(REFRESH) this.refresh();

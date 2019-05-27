@@ -33,9 +33,9 @@ class Vector extends O.EventEmitter{
     let s1, c1, s2, c2;
 
     switch(dir){
-      case 0: s1 = -1, c1 = 0, s2 = 0, c2 = 1; break;
+      case 0: s1 = 1, c1 = 0, s2 = 0, c2 = 1; break;
       case 1: s1 = 0, c1 = 1, s2 = 1, c2 = 0; break;
-      case 2: s1 = 1, c1 = 0, s2 = 0, c2 = 1; break;
+      case 2: s1 = -1, c1 = 0, s2 = 0, c2 = 1; break;
       case 3: s1 = 0, c1 = 1, s2 = -1, c2 = 0; break;
       case 4: s1 = 0, c1 = 1, s2 = 0, c2 = -1; break;
       case 5: s1 = 0, c1 = 1, s2 = 0, c2 = 1; break;
@@ -113,22 +113,6 @@ class Vector extends O.EventEmitter{
   rotn(rx, ry, rz){ return this.rot(-rx, -ry, -rz); }
   rotnsc(sx, cx, sy, cy, sz, cz){ return this.rotsc(-sx, cx, -sy, cy, -sz, cz); }
 
-  rotDir(dir){
-    throw new Error('???');
-    // TODO: check if this even works
-    switch(dir){
-      // TODO: replace all of these with `this.rotsc`
-      case 0: this.rot(0, 0, 0); break; // TODO: delete case 0
-      case 1: this.rot(0, O.pi32, 0); break;
-      case 2: this.rot(0, O.pi, 0); break;
-      case 3: this.rot(0, O.pih, 0); break;
-      case 4: this.rot(O.pih, 0, 0); break;
-      case 5: this.rot(O.pi32, 0, 0); break;
-    }
-
-    return this;
-  }
-
   rotDirn(dir){ return this.rotDir(Vector.revDir(dir)); }
 
   lt(x, y, z){ return this.x < x && this.y < y && this.z < z; }
@@ -154,9 +138,9 @@ class Vector extends O.EventEmitter{
 
   nav(dir){
     switch(dir){
-      case 0: this.z++; break;
+      case 0: this.z--; break;
       case 1: this.x++; break;
-      case 2: this.z--; break;
+      case 2: this.z++; break;
       case 3: this.x--; break;
       case 4: this.y--; break;
       case 5: this.y++; break;

@@ -11,6 +11,8 @@ const Frame = require('../frame');
 const elemCtors = require('../sandbox');
 const Page = require('./page');
 
+const DEFAULT_TAB = 'simulator';
+
 const WIDTH = 926;
 const HEIGHT = 671;
 
@@ -22,7 +24,6 @@ class Sandbox extends Page{
   constructor(parent){
     super(parent);
 
-    this.choice = new elemCtors.LanguageChoice(this);
     this.running = 0;
     this.awaitingPause = 0;
     this.disposed = 0;
@@ -33,6 +34,7 @@ class Sandbox extends Page{
       ['input', labs.input],
       ['output', labs.output],
       ['simulator', labs.simulator],
+      ['config', labs.config],
     ]);
 
     const editors = this.editors = O.obj();
@@ -49,8 +51,11 @@ class Sandbox extends Page{
     }
 
     const canvCont = new elemCtors.CanvasContainer(frame.contents[3].elem);
-    const reng = new RenderEngine(canvCont.elem, WIDTH, HEIGHT);
+    const reng = this.reng = new RenderEngine(canvCont.elem, WIDTH, HEIGHT);
     reng.init()//.catch(log);
+
+    const config = this.config = new elemCtors.Configuration(frame.contents[4]);
+    let doNotEval = 0;
 
     frame.on('select', tab => {
       if(this.disposed) return;
@@ -58,84 +63,161 @@ class Sandbox extends Page{
       const {script, input, output} = this.editors;
       const {name} = tab;
 
-      if(name === 'output'){
-        output.val = 'Computing...';
-        output.elem.classList.remove('output-error');
-        output.elem.classList.add('output-computing');
+      const out = name === 'output';
+      const sim = name === 'simulator';
 
+      if(out && doNotEval){
+        doNotEval = 0;
+        return;
+      }
+
+      if(out || sim){
         (async () => {
           await O.await(() => this.disposed || !this.running);
           if(this.disposed) return;
           this.running = 1;
 
-          const lang = await this.choice.getLang();
+          output.val = 'Computing...';
+          output.elem.classList.remove('output-error');
+          output.elem.classList.add('output-computing');
+
+          reng.play();
+
+          const lang = await this.config.getLang();
           if(this.disposed) return;
 
           const eng = this.eng = new ProgLangEngine(lang, script.val, MAX_SIZE, CRITICAL_SIZE);
-          const io = new O.IO(input.val);
-
-          const onRead = (buf, len) => {
-            buf[0] = io.read();
-            return io.hasMore;
-          };
-
-          const onWrite = (buf, len) => {
-            io.write(buf[0]);
-          };
-
-          eng.stdout.on('write', onWrite);
-          eng.stdin.on('read', onRead);
-
           let error = null;
+          let io;
 
-          eng.stderr.on('write', (buf, len) => {
-            error = buf.toString();
-            eng.pause();
-          });
+          if(out){
+            io = new O.IO(input.val);
 
-          await O.await(() => {
-            if(this.disposed || this.awaitingPause || error !== null) return 1;
-            return eng.run(INSTRUCTIONS_PER_TICK).done;
-          });
-          if(this.disposed) return;
+            eng.stdin.on('read', (buf, len) => {
+              buf[0] = io.read();
+              return io.hasMore;
+            });
 
-          if(this.awaitingPause){
-            this.awaitingPause = 0;
-            this.running = 0;
-            return;
+            eng.stdout.on('write', (buf, len) => {
+              io.write(buf[0]);
+            });
+
+            eng.stderr.on('write', (buf, len) => {
+              error = buf.toString();
+              eng.pause();
+            });
+
+            await O.await(async () => {
+              if(this.disposed || this.awaitingPause || error !== null) return 1;
+              eng.run(INSTRUCTIONS_PER_TICK);
+              return eng.done;
+            });
+          }else{
+            const inp = [];
+            const out = [];
+
+            eng.stdin.on('read', (buf, len) => {
+              if(len & 7)
+                throw O.glob.dom.alert('Input bit stream is currently not supported in simulator');
+
+              len >>= 3;
+
+              for(let i = 0; i !== len; i++){
+                if(out.length !== 0) buf[i] = out.shift();
+                else buf[i] = 0;
+              }
+
+              return 1;
+            });
+
+            eng.stdout.on('write', (buf, len) => {
+              if(len & 7)
+                throw O.glob.dom.alert('Output bit stream is currently not supported in simulator');
+
+              len >>= 3;
+
+              for(let i = 0; i !== len; i++)
+                inp.push(buf[i]);
+
+              eng.pause();
+            });
+
+            eng.stderr.on('write', (buf, len) => {
+              error = buf.toString();
+              eng.pause();
+            });
+
+            const onTick = bot => {
+              let ticks = INSTRUCTIONS_PER_TICK;
+
+              while(ticks > 0){
+                const prev = ticks;
+                ticks = this.execute(bot, inp, out, ticks);
+                if(ticks === prev) break;
+              }
+
+              while(ticks > 0 && !eng.done){
+                ticks = eng.run(ticks);
+
+                while(ticks > 0){
+                  const prev = ticks;
+                  ticks = this.execute(bot, inp, out, ticks);
+                  if(ticks === prev) break;
+                }
+              }
+            };
+
+            reng.on('tick', onTick);
+
+            await O.await(async () => {
+              if(this.disposed || this.awaitingPause || error !== null) return 1;
+              return eng.done;
+            }, 1e3);
+
+            reng.rel('tick', onTick);
           }
+
+          if(this.disposed) return;
+          this.running = 0;
+          this.awaitingPause = 0;
+          output.elem.classList.remove('output-computing');
 
           if(error !== null){
             output.val = error;
-            output.elem.classList.remove('output-computing');
             output.elem.classList.add('output-error');
-            this.running = 0;
+
+            if(sim){
+              doNotEval = 1;
+              frame.selectTab('output');
+            }
+
             return;
           }
 
-          output.val = io.getOutput().toString();
-          output.elem.classList.remove('output-computing');
-
-          this.running = 0;
+          if(out)
+            output.val = io.getOutput().toString();
         })()//.catch(log);
+
         return;
       }
-
-      if(name === 'simulator')
-        reng.play();
     });
 
     frame.on('unselect', tab => {
       const {name} = tab;
 
-      if(name === 'output') this.awaitingPause = this.running;
-      else if(name === 'simulator') reng.pause();
+      const out = name === 'output';
+      const sim = name === 'simulator';
+
+      if(out || sim){
+        this.awaitingPause = this.running;
+        if(sim) reng.pause();
+      }
     });
 
     const onKeyDown = evt => {
       if(this.disposed || !evt.ctrlKey) return;
 
-      const matchDigit = evt.code.match(/^(?:Digit|Numpad)([1234])$/);
+      const matchDigit = evt.code.match(/^(?:Digit|Numpad)([12345])$/);
       if(matchDigit !== null){
         O.pd(evt);
 
@@ -152,9 +234,111 @@ class Sandbox extends Page{
       O.rel('keydown', onKeyDown);
       reng.dispose();
     });
+
+    // frame.selectTab(DEFAULT_TAB);
+
+    editors.script.val = `
+      0, 1,
+      ==, =, var, [],
+      in, out, eof, #,
+
+      var(x, #(5)),
+      var(y, #(7)),
+      var(z, #(11)),
+
+      var(f, []()(
+        #().rotate(#(1)),
+        #().go(),
+        #().jump(),
+        #().go(),
+
+        f()
+      ))()
+    `;
+
+    editors.input.val = `abcde`;
+
+    frame.selectTab('simulator');
   }
 
   static title(){ return LS.titles.sandbox; }
+
+  execute(bot, inp, out, ticks){
+    if(inp.length === 0) return ticks;
+
+    const op = inp[0];
+
+    switch(op){
+      case 0x00: // Dispatch
+        out.length = 0;
+        out.push(0);
+        inp.splice(0, 1);
+        ticks = 0;
+        break;
+
+      case 0x01: // Rotate
+        if(inp.length < 2) break;
+        out.length = 0;
+
+        const dir = inp[1];
+        if(dir === (dir & 3)){
+          bot.dir = bot.dir + dir & 3;
+          out.push(0);
+        }else{
+          out.push(1);
+        }
+
+        ticks = 0;
+        inp.splice(0, 2);
+        break;
+
+      case 0x02: // Go forward
+        out.length = 0;
+
+        if(bot.canGo()){
+          bot.go();
+          out.push(0);
+        }else{
+          out.push(1);
+        }
+
+        inp.splice(0, 1);
+        ticks = 0;
+        break;
+
+      case 0x03: // Jump
+        out.length = 0;
+
+        if(bot.canJump()){
+          bot.jump();
+          out.push(0);
+        }else{
+          out.push(1);
+        }
+
+        inp.splice(0, 1);
+        ticks = 0;
+        break;
+
+      case 0x04:
+        inp.splice(0, 4);
+        break;
+
+      case 0x05:
+        break;
+
+      case 0x06:
+        break;
+
+      default:
+        out.length = 0;
+        out.push(1);
+        ticks = 0;
+        break;
+    }
+
+    return ticks;
+  }
 
   css(){ return 'sandbox'; }
 }

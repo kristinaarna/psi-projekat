@@ -73,13 +73,24 @@ class Object extends Ray{
     let t;
 
     switch(this.#dir){
-      case 0: [x, z] = [x, z]; break;
-      case 1: [x, z] = [z, x]; break;
+      case 1: [x, z] = [-z, x]; break;
       case 2: [x, z] = [-x, -z]; break;
-      case 3: [x, z] = [-z, -x]; break;
+      case 3: [x, z] = [z, -x]; break;
     }
 
     return this.grid.get(this.x + x, this.y + y, this.z + z);
+  }
+
+  canJump(){
+    return this.get(0, -1, 0).has.ground && this.get(0, 1, 0).free;
+  }
+
+  jump(){
+    this.nav(5);
+  }
+
+  descend(){
+    this.nav(4);
   }
 
   move(x, y, z){
@@ -98,14 +109,32 @@ class Object extends Ray{
     super.rot(rx, ry, rz);
   }
 
+  canGo(){
+    return this.get(0, 0, -1).free;
+  }
+
+  go(){
+    this.nav(this.dir);
+  }
+
+  turnLeft(){
+    this.dir = this.dir + 1 & 3;
+  }
+
+  turnRight(){
+    this.dir = this.dir - 1 & 3;
+  }
+
   get dir(){
     return this.#dir;
   }
 
   set dir(dir){
     this.#dir = dir;
-    this.rot(0, (dir + 2) * O.pih, 0);
+    this.rot(0, -dir * O.pih, 0);
   }
+
+  get reng(){ return this.grid.reng; }
 
   addShape(shape=null){
     const {shapes} = this;
@@ -142,28 +171,37 @@ class Object extends Ray{
   getv(v){ return this.get(v.x, v.y, v.z); }
   movev(v){ return this.move(v.x, v.y, v.z); }
   rotv(v){ return this.rot(v.x, v.y, v.z); }
-};
+}
 
 class Dirt extends Object{
-  static is = Object.traits(['occupying', 'opaque', 'blocking', 'ground']);
+  static is = Object.traits(['occupying', 'opaque', 'ground']);
   static model = 'cubeuv';
   static material = 'dirt';
 
   constructor(tile){
     super(tile);
-
     this.addShape();
   }
-};
+}
+
+class Tree extends Object{
+  static is = Object.traits(['occupying']);
+  static model = 'tree';
+  static material = 'tree';
+
+  constructor(tile){
+    super(tile);
+    this.addShape();
+  }
+}
 
 class Rock extends Object{
-  static is = Object.traits(['occupying', 'ground', 'pushable']);
+  static is = Object.traits(['occupying', 'nonFloating', 'pushable']);
   static model = 'rock';
   static material = 'rock';
 
   constructor(tile){
     super(tile);
-
     this.addShape();
 
     const angle = O.randf(O.pi2);
@@ -179,38 +217,102 @@ class Rock extends Object{
       return;
     }
   }
-};
+}
 
-class Bot extends Object{
-  static is = Object.traits(['occupying']);
-  static model = 'bot';
-  static material = 'bot';
+class Animal extends Object{
+  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static model = 'animal';
+  static material = 'animal';
+
+  jumped = 0;
 
   constructor(tile){
     super(tile);
-
     this.addShape();
   }
 
   onTick(){
-    const {grid, dir} = this;
+    const {jumped} = this;
 
-    if(grid.getv(Vector.navv(this, 4)).empty){
-      this.nav(4);
-      return;
-    }
+    this.jumped = 0;
 
-    if(O.rand(4) && grid.getv(Vector.navv(this, dir)).empty && !grid.getv(Vector.navv(this, dir).nav(4)).empty){
-      this.nav(dir);
+    if(this.get(0, -1, 0).nempty){
+      if(O.rand(4) !== 0){
+        if(this.get(0, 0, -1).empty && !(this.get(0, -1, -1).empty && this.get(0, -2, -1).empty))
+          return this.go();
+
+        if(this.get(0, -1, 0).has.ground && this.get(0, 1, 0).empty && this.get(0, 0, -1).has.ground && this.get(0, 1, -1).empty){
+          this.jump();
+          this.jumped = 1;
+          return;
+        }
+      }
+
+      this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
     }else{
-      this.dir = dir + (O.rand(2) ? 1 : -1) & 3;
+      if(!jumped){
+        if(O.rand(2)) this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
+        return this.descend();
+      }
+
+      if(this.get(0, 0, -1).empty && !(this.get(0, -1, -1).empty && this.get(0, -2, -1).empty))
+        return this.go();
+
+      if(O.rand(2)) this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
+      this.descend();
     }
   }
-};
+}
+
+class Bot extends Object{
+  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static model = 'bot';
+  static material = 'bot';
+
+  jumped = 0;
+  jumpedPrev = 0;
+  moved = 0;
+
+  constructor(tile){
+    super(tile);
+    this.addShape();
+  }
+
+  onTick(){
+    this.jumpedPrev = this.jumped;
+    this.jumped = 0;
+    this.moved = 0;
+
+    const shouldDescend = this.get(0, -1, 0).free;
+
+    this.reng.emit('tick', this);
+
+    if(shouldDescend && this.get(0, -1, 0).free && !(this.moved && (this.jumpedPrev || this.jumped)))
+      this.descend();
+  }
+
+  go(){
+    super.go();
+    this.moved = 1;
+  }
+
+  canGo(){
+    if(!super.canGo()) return 0;
+    if(this.get(0, -1, 0).nfree) return 1;
+    return this.jumpedPrev;
+  }
+
+  jump(){
+    super.jump();
+    this.jumped = 1;
+  }
+}
 
 const ctorsArr = [
   Dirt,
   Rock,
+  Tree,
+  Animal,
   Bot,
 ];
 

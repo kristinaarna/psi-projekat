@@ -23,6 +23,9 @@ class Compiler extends CompilerBase{
   }
 
   ['[script]'](e, th){
+    const msg = 'This programming language is temporarily marked as unsafe';
+    return th.throw(new cgs.SecurityError(this.g, msg));
+
     const expr = proc(e.elems[1].fst);
     const input = O.rfs(format.path('-dw/input.txt'));
     const output = L.invoke(expr, input);

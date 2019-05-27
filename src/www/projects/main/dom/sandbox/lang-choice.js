@@ -4,8 +4,6 @@ const PL = require('/node/prog-langs/programming-language');
 const langsList = require('/node/prog-langs/langs-list');
 const LS = require('../../strings');
 const Element = require('../element');
-const TextEditor = require('../text-editor');
-const Form = require('../form');
 
 const DEFAULT_LANG = 'Functional()';
 

@@ -11,6 +11,8 @@ const textures = {
   sky: './textures/sky.png',
   dirt: './textures/dirt.png',
   rock: './textures/rock.png',
+  tree: './textures/tree.png',
+  animal: './textures/animal.png',
   bot: './textures/bot.png',
 };
 

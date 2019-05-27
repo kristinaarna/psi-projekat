@@ -21,17 +21,6 @@ class Register extends Page{
       ['InputText', 'captchaStr', 'captcha'],
     ];
 
-    O.ael('keydown', e => {
-      if(e.code === 'F4'){
-        O.pd(e);
-        const fs = form.fields;
-        fs.nick.val = 'a';
-        fs.email.val = 'a@a';
-        fs.pass.val = '123456xX';
-        fs.pass2.val = fs.pass.val;
-      }
-    });
-
     this.fields = fields.map(([ctorName, fieldName, labelName]) => {
       const ctor = Element[ctorName];
       const label = LS.labels.forms.fields[labelName];
@@ -43,7 +32,7 @@ class Register extends Page{
       const {nick, email, pass, pass2, captchaToken, captchaStr} = fields;
       const {dom} = O.glob;
 
-      if(pass2 !== pass) return dom.err('passNotMatch');
+      if(pass2 !== pass) return dom.err('passDiff');
 
       backend.register(nick, email, pass, captchaToken, captchaStr).then(data => {
         dom.succ('register', () => {

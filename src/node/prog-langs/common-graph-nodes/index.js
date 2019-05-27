@@ -18,6 +18,9 @@ const nodes = [
   'reference-error',
   'type-error',
   'range-error',
+  'security-error',
+  'fatal-error',
+  'unknown-error',
 
   'undefined',
   'string',
@@ -25,6 +28,8 @@ const nodes = [
   'set',
   'map',
   'object',
+
+  'read',
 ];
 
 const ctorsArr = [];

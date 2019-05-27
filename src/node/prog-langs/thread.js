@@ -7,7 +7,7 @@ const SG = require('../serializable-graph');
 const SF = require('./stack-frame');
 const cgs = require('./common-graph-nodes');
 
-const DEBUG = 1;
+const DEBUG = 0;
 const SF_ONLY = !DEBUG;
 
 class Thread extends SG.Node{
@@ -123,6 +123,8 @@ class Thread extends SG.Node{
     this.ret(null);
     this.err = err;
     this.hasErr = 1;
+
+    return null;
   }
 
   debug(sf){

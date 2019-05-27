@@ -8,6 +8,8 @@ const SF = require('../../stack-frame');
 const cgs = require('../../common-graph-nodes');
 const CompilerBase = require('../../compiler-base');
 
+// TODO: linter: forbid semicolon after class definition
+
 class Compiler extends CompilerBase{
   static ptrsNum = this.keys(['idents']);
 
@@ -57,6 +59,9 @@ class Compiler extends CompilerBase{
 
       if(len === i) break initIdents;
       idents.set(arr[i++], new cs.Eof(g));
+
+      if(len === i) break initIdents;
+      idents.set(arr[i++], this.intp.simulator);
     }
 
     const inv = new cs.GlobalInvocation(g, idents, list);

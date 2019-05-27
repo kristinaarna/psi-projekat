@@ -24,41 +24,50 @@ class Engine{
   get active(){ return !this.paused && this.#machine.active; }
   get done(){ return this.#machine.done; }
 
+  get calledGC(){ return this.#machine.calledGC; }
+
   tick(){
     this.#machine.tick();
   }
 
   run(ticks=null){
+    const machine = this.#machine;
     this.paused = 0;
 
-    const t = Date.now();
+    const t = O.now();
     let n = 0n;
 
     try{
       while(this.active){
-        if(ticks !== null && ticks-- === 0) break;
+        if(ticks !== null && ticks-- === 0){
+          ticks++;
+          break;
+        }
+
         this.tick();
         n++;
       }
     }catch(err){
+      throw err;
       let msg;
 
       if(err instanceof Error){
         msg = `${err.name}: ${err.message}`;
       }else{
-        msg = `FatalError: Something went really bad :/`;
+        msg = 'UnknownError';
       }
 
       this.stderr.write(msg);
     }
 
     if(DEBUG && this.done){
-      log(`Time: ${format.time((Date.now() - t) / 1e3 + .5 | 0)}`);
+      log(`Time: ${format.time((O.now() - t) / 1e3 + .5 | 0)}`);
       log(`Instructions: ${format.num(n)}`);
       log();
     }
 
-    return this.pause();
+    this.paused = 1;
+    return ticks;
   }
 
   pause(){

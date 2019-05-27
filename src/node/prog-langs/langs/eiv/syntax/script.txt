@@ -1,4 +1,5 @@
-script{ s0 list s0 }
+script{ [ -~\r\n]* }
+script1{ s0 list s0 }
 
 list{ args? s0 elem+s0 }
 args{ ident+s0 s0 "." }

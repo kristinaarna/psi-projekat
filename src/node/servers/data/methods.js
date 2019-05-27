@@ -60,7 +60,7 @@ const methods = {
       const captcha = Captcha.get(captchaToken);
       if(captcha === null) throw msg;
 
-      const ok = typeof captchaStr === 'string' && captcha.check(captchaStr);
+      const ok = check.str(captchaStr) && captcha.check(captchaStr);
       captcha.invalidate();
       if(!ok) throw msg;
     }

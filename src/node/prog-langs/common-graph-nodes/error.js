@@ -55,6 +55,9 @@ class Error extends SG.Node{
     const stackStr = stackArr.join(LINE_SEP);
     const stack = new cgs.String(g, stackStr);
 
+    if(typeof message === 'string')
+      message = new cgs.String(g, message);
+
     this.message = message;
     this.stack = stack;
     this.script = script;

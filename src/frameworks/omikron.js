@@ -2240,20 +2240,21 @@ const O = {
 
     O.glob = O.obj();
 
-    var global = O.global = new Function('return this;')();
-    var env = 'navigator' in global ? 'browser' : 'node';
+    const global = O.global = new Function('return this;')();
+    const env = 'navigator' in global ? 'browser' : 'node';
 
     O.env = env;
 
-    var isBrowser = O.isBrowser = env === 'browser';
-    var isNode = O.isNode = env === 'node';
-    var isElectron = O.isElectron = isBrowser && navigator.userAgent.includes('Electron');
+    const isBrowser = O.isBrowser = env === 'browser';
+    const isNode = O.isNode = env === 'node';
+    const isElectron = O.isElectron = isBrowser && navigator.userAgent.includes('Electron');
 
     if(isBrowser){
       if(CHROME_ONLY && global.navigator.vendor !== 'Google Inc.')
         return O.error('Please use Chrome.');
 
       if(!isElectron){
+        global.global = global;
         O.lst = window.localStorage;
         O.sst = window.sessionStorage;
       }
@@ -3093,11 +3094,11 @@ const O = {
     return obj;
   },
 
-  await(func){
+  await(func, timeout=0){
     return new Promise(res => {
       const test = async () => {
         if(await func()) return res();
-        setTimeout(test);
+        setTimeout(test, timeout);
       };
 
       test();
@@ -3545,7 +3546,7 @@ const O = {
       ));
     };
 
-    const ord = char => {
+    const ord = (char, mode) => {
       if(char === (mode ? '-' : '+')) return 62;
       if(char === (mode ? '_' : '/')) return 63;
 
@@ -3565,7 +3566,7 @@ const O = {
 
   exit(...args){
     if(!(O.isNode || O.isElectron))
-      throw new TypeError('Only Node.js or Electron process can be terminated');
+      throw new TypeError('Only Node.js and Electron processes can be terminated');
 
     if(args.length !== 0)
       log(...args);

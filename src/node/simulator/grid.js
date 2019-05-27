@@ -12,8 +12,10 @@ class Grid extends O.EventEmitter{
 
   updateSym = Symbol();
 
-  constructor(){
+  constructor(reng){
     super();
+
+    this.reng = reng;
   }
 
   static obj(){
@@ -100,18 +102,14 @@ class Grid extends O.EventEmitter{
     return 0;
   }
 
-  trace(ray, maxDist=null, findOpaque=1, findBlocking=1, findAny=1){
+  trace(ray, maxDist=null, findOpaque=1, findAny=1){
     let dPrev = this.getv(ray);
     let i = 0;
 
     while(1){
       const d = this.getv(ray.move());
 
-      if(
-        findAny ? d.nempty :
-        findOpaque && d.has.opaque ||
-        findBlocking && d.has.blocking
-      ){
+      if(findAny ? d.nempty : findOpaque && d.has.opaque){
         ray.nav(ray.dir);
         return d;
       }
