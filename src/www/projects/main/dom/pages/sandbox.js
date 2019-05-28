@@ -21,6 +21,8 @@ const CRITICAL_SIZE = MAX_SIZE - 1e3;
 const INSTRUCTIONS_PER_TICK = 1e4;
 
 class Sandbox extends Page{
+  #coords = new Int8Array(3);
+
   constructor(parent){
     super(parent);
 
@@ -246,11 +248,11 @@ class Sandbox extends Page{
       var(y, #(7)),
       var(z, #(11)),
 
+      var(n, ==(#(1), #(1))(#(1), #(3))),
+
       var(f, []()(
-        #().rotate(#(1)),
-        #().go(),
-        #().jump(),
-        #().go(),
+        var(a, #().canSee(#(0), #(0), #(-2))),
+        #().rotate(a(#(1), #(3))),
 
         f()
       ))()
@@ -320,7 +322,15 @@ class Sandbox extends Page{
         ticks = 0;
         break;
 
-      case 0x04:
+      case 0x04: // Can see tile
+        if(inp.length < 4) break;
+        out.length = 0;
+
+        const [x, y, z] = this.getCoords(inp);
+
+        out.push(0);
+        out.push(bot.canSee(x, y, z));
+
         inp.splice(0, 4);
         break;
 
@@ -338,6 +348,16 @@ class Sandbox extends Page{
     }
 
     return ticks;
+  }
+
+  getCoords(inp){
+    const cs = this.#coords;
+
+    cs[0] = inp[1];
+    cs[1] = inp[2];
+    cs[2] = inp[3];
+
+    return cs;
   }
 
   css(){ return 'sandbox'; }

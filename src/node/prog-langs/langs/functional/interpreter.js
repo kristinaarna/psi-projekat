@@ -295,7 +295,7 @@ class Equality extends NativeInvocation{
     const ctor1 = v1.constructor;
     const ctor2 = v2.constructor;
 
-    const bit = (ctor1 === ctor2 && ctor1.cmp(ctor1, ctor2)) & 1;
+    const bit = (ctor1 === ctor2 && ctor1.cmp(v1, v2)) & 1;
     const val = this.intp.globInv.getIdentByIndex(bit);
 
     th.ret(val);

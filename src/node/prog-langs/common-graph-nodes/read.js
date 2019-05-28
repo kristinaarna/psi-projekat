@@ -26,7 +26,7 @@ class Read extends SF{
   deser(s){
     super.deser(s);
     this.len = ser.readUint();
-    if(ser.read(1)) this.buf = ser.readBuf();
+    if(ser.read()) this.buf = ser.readBuf();
     else this.buf = null;
   }
 

@@ -3,6 +3,7 @@
 const Shape = require('./shape');
 const Material = require('./material');
 const Model = require('./model');
+const DiscreteRay = require('./discrete-ray');
 const Ray = require('./ray');
 const Vector = require('./vector');
 
@@ -81,6 +82,23 @@ class Object extends Ray{
     return this.grid.get(this.x + x, this.y + y, this.z + z);
   }
 
+  canSee(x, y, z){
+    if(x === 0 && y === 0 && z === 0)
+      return 1;
+
+    const {dir} = this;
+
+    const v = new Vector(x, y, z);
+    const {lenm} = v;
+
+    const v1 = Vector.from(this).add(.5, .5, .5);
+    const v2 = v.clone().rotDir(dir).norm();
+    const ray = new DiscreteRay(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
+    const d = this.grid.trace(ray, lenm, 1, 0);
+
+    return d === null || Vector.from(d).subv(this).lenm === lenm;
+  }
+
   canJump(){
     return this.get(0, -1, 0).has.ground && this.get(0, 1, 0).free;
   }
@@ -111,6 +129,10 @@ class Object extends Ray{
 
   canGo(){
     return this.get(0, 0, -1).free;
+  }
+
+  safeToGo(){
+    return this.get(0, -1, -1).has.ground || this.get(0, -2, -1).has.ground;
   }
 
   go(){
@@ -219,75 +241,20 @@ class Rock extends Object{
   }
 }
 
-class Animal extends Object{
-  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
-  static model = 'animal';
-  static material = 'animal';
-
-  jumped = 0;
-
-  constructor(tile){
-    super(tile);
-    this.addShape();
-  }
-
-  onTick(){
-    const {jumped} = this;
-
-    this.jumped = 0;
-
-    if(this.get(0, -1, 0).nempty){
-      if(O.rand(4) !== 0){
-        if(this.get(0, 0, -1).empty && !(this.get(0, -1, -1).empty && this.get(0, -2, -1).empty))
-          return this.go();
-
-        if(this.get(0, -1, 0).has.ground && this.get(0, 1, 0).empty && this.get(0, 0, -1).has.ground && this.get(0, 1, -1).empty){
-          this.jump();
-          this.jumped = 1;
-          return;
-        }
-      }
-
-      this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
-    }else{
-      if(!jumped){
-        if(O.rand(2)) this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
-        return this.descend();
-      }
-
-      if(this.get(0, 0, -1).empty && !(this.get(0, -1, -1).empty && this.get(0, -2, -1).empty))
-        return this.go();
-
-      if(O.rand(2)) this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
-      this.descend();
-    }
-  }
-}
-
-class Bot extends Object{
-  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
-  static model = 'bot';
-  static material = 'bot';
-
+class Entity extends Object{
   jumped = 0;
   jumpedPrev = 0;
-  moved = 0;
+  shouldDescend = 0;
 
-  constructor(tile){
-    super(tile);
-    this.addShape();
-  }
-
-  onTick(){
+  beforeTick(){
     this.jumpedPrev = this.jumped;
     this.jumped = 0;
-    this.moved = 0;
 
-    const shouldDescend = this.get(0, -1, 0).free;
+    this.shouldDescend = this.get(0, -1, 0).free;
+  }
 
-    this.reng.emit('tick', this);
-
-    if(shouldDescend && this.get(0, -1, 0).free && !(this.moved && (this.jumpedPrev || this.jumped)))
+  afterTick(){
+    if(this.shouldDescend && this.get(0, -1, 0).free)
       this.descend();
   }
 
@@ -307,6 +274,54 @@ class Bot extends Object{
     this.jumped = 1;
   }
 }
+
+class Animal extends Entity{
+  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static model = 'animal';
+  static material = 'animal';
+
+  constructor(tile){
+    super(tile);
+    this.addShape();
+  }
+
+  onTick(){
+    this.beforeTick();
+
+    switch(O.rand(4)){
+      case 1:
+        this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
+        break;
+
+      case 2:
+        if(this.canGo() && this.safeToGo()) this.go();
+        break;
+
+      case 3:
+        if(this.canJump()) this.jump();
+        break;
+    }
+
+    this.afterTick();
+  }
+}
+
+class Bot extends Entity{
+  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static model = 'bot';
+  static material = 'bot';
+
+  constructor(tile){
+    super(tile);
+    this.addShape();
+  }
+
+  onTick(){
+    this.beforeTick();
+    this.reng.emit('tick', this);
+    this.afterTick();
+  }
+};
 
 const ctorsArr = [
   Dirt,

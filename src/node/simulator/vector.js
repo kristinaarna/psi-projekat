@@ -75,12 +75,11 @@ class Vector extends O.EventEmitter{
   set len(len){ this.mul(len / this.len); }
   setLen(len){ this.mul(len / this.len); return this; }
 
+  eq(x, y, z){ return x === this.x && y === this.y && z === this.z; }
   set(x, y, z){ this.x = x; this.y = y; this.z = z; return this; }
   move(x, y, z){ this.x = x; this.y = y; this.z = z; return this; }
-
   add(x, y, z){ this.x += x; this.y += y; this.z += z; return this; }
   sub(x, y, z){ this.x -= x; this.y -= y; this.z -= z; return this; }
-
   dist(x, y, z){ const dx = this.x - x, dy = this.y - y, dz = this.z - z; return sqrt(dx * dx + dy * dy + dz * dz); }
   dists(x, y, z){ const dx = this.x - x, dy = this.y - y, dz = this.z - z; return dx * dx + dy * dy + dz * dz; }
   distm(x, y, z){ return abs(this.x - x) + abs(this.y - y) + abs(this.z - z); }
@@ -110,6 +109,21 @@ class Vector extends O.EventEmitter{
     return this;
   }
 
+  rotDir(dir){
+    let {x, z} = this;
+
+    switch(dir){
+      case 1: [x, z] = [-z, x]; break;
+      case 2: [x, z] = [-x, -z]; break;
+      case 3: [x, z] = [z, -x]; break;
+    }
+
+    this.x = x;
+    this.z = z;
+
+    return this;
+  }
+
   rotn(rx, ry, rz){ return this.rot(-rx, -ry, -rz); }
   rotnsc(sx, cx, sy, cy, sz, cz){ return this.rotsc(-sx, cx, -sy, cy, -sz, cz); }
 
@@ -118,6 +132,7 @@ class Vector extends O.EventEmitter{
   lt(x, y, z){ return this.x < x && this.y < y && this.z < z; }
   gt(x, y, z){ return this.x > x && this.y > y && this.z > z; }
 
+  eqv(v){ return this.eq(v.x, v.y, v.z); }
   setv(v){ return this.set(v.x, v.y, v.z); }
   movev(v){ return this.move(v.x, v.y, v.z); }
   addv(v){ return this.add(v.x, v.y, v.z); }

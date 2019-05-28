@@ -265,13 +265,13 @@ class CanSeeTile extends cs.NativeInvocation{
 
     if(this.nval){
       this.g.stdout.write(O.Buffer.from([0x04, x.int, y.int, z.int]));
-      return th.call(new cgs.Read(g, 8));
+      return th.call(new cgs.Read(g, 16));
     }
 
     const {buf} = this.gval;
     if(buf[0] !== 0) return th.ret(new Null(g));
 
-    this.intp.globInv.getIdentByIndex((buf[1] & 1) ^ 1);
+    th.ret(this.intp.globInv.getIdentByIndex(buf[1] & 1));
   }
 }
 

@@ -194,7 +194,8 @@ class RenderEngine extends O.EventEmitter{
       }));
     });
 
-    new cs.Bot(grid.get(10, 1, 10).purge());
+    new cs.Bot(grid.get(5, 1, 5).purge());
+    new cs.Rock(grid.get(9, 1, 5).purge());
   }
 
   aels(){
