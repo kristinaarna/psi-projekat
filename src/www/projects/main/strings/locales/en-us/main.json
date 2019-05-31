@@ -1,141 +1,141 @@
-{
-  "labels": {
-    "navbar": {
-      "left": {
-        "home": "Home",
-        "sandbox": "Sandbox",
-        "competition": "Competition",
-        "search": "Search",
-        "help": "Help",
-        "language": "Language"
-      },
-      "right": {
-        "register": "Register",
-        "login": "Log In",
-        "profile": "Profile",
-        "logout": "Log Out"
-      }
-    },
-    "forms": {
-      "fields": {
-        "nick": "Username",
-        "email": "Email",
-        "pass": "Password",
-        "pass2": "Confirm password",
-        "captcha": "Enter characters from the picture",
-        "users": "Users",
-        "competitions": "Competitions",
-        "functionalities": "Functionalities",
-        "posts": "Posts",
-        "keywords": "Key words",
-        "postContent": "Post content",
-        "compTitle": "Competition title",
-        "compDesc": "Competition description",
-        "newVal": "New value"
-      },
-      "buttons": {
-        "confirm": "Confirm",
-        "ok": "OK",
-        "search": "Search",
-        "addPost": "Add post",
-        "addComp": "Add competition"
-        "turnIntoMod": "Turn into moderator",
-        "deleteOwnProfile": "Delete your profile",
-        "deleteOtherProfile": "Delete this user's profile"
-      }
-    },
-    "sandbox": {
-      "script": "Script",
-      "input": "Entrance",
-      "output": "Exit",
-      "simulator": "Simulator",
-      "config": "Settings"
-    },
-    "competition": {
-      "title": "Competition title",
-      "startTime": "Start time",
-      "apply": "Apply",
-      "giveUp": "Give up",
-      "msgs": {
-        "applied": "You have successfully applied for the competition",
-        "gaveUp": "You have successfully signed out from the competition"
-      }
-    },
-    "functionality": {
-      "upgrade": "Upgrade",
-      "msgs": {
-        "upgraded": "You have successfully upgraded your functionality"
-      }
-    },
-    "userProfile": {
-      "nick": "Username",
-      "email": "Email",
-      "registrationDate": "Registration date",
-      "points": "Points",
-      "fullName": "Full name",
-      "desc": "Description",
-      "isMod": "Moderator"
-    }
-  },
-  "titles": {
-    "home": "Home",
-    "sandbox": "Sandbox",
-    "competition": "Competition",
-    "help": "Help",
-    "language": "Language",
-    "register": "Register",
-    "login": "Login",
-    "userProfile": "User profile"
-  },
-  "simulator": {
-    "objects": {
-      "dirt": "Dirt",
-      "rock": "Rock",
-      "tree": "Tree",
-      "animal": "Animal",
-      "bot": "Bot",
-      "coin": "Coin"
-    }
-  },
-  "errors": {
-    "error": "Error",
-    "noimpl": "The requested functionality is not implemented",
-    "singleFile": "You can select one file at most",
-    "server": {
-      "status": {
-        "400": "Illegal request",
-        "404": "Page not found",
-        "500": "Error on the server"
-      },
-      "info": {
-        "invalidURL": "Invalid URL",
-        "unknownEntry": "Unknown record type on disc"
-      }
-    },
-    "query": {
-      "passDiff": "Passwords do not match",
-      "invalidNick": "The username must consist of small Latin letters and optional dashes, mustn't begin or end with a dash and can't contain two consecutive dashes",
-      "invalidEmail": "Email address is invalid",
-      "invalidPass": "The password must have a minimum of 8 characters and a maximum of 64 characters, only visible ASCII characters, including a blank character, can be used,password must contain at least one uppercase letter and one lowercase letter, as well as a number",
-      "invalidCaptcha": "The characters you entered do not match the image or the image has expired",
-      "nickExists": "The username you entered already exists",
-      "wrongNickOrPass": "Invalid username or password",
-      "notEnoughPoints": "You don't have enough points",
-      "alreadyMod": "User is already moderator",
-      "invalidToken": "Invalid Token",
-      "invalidImg": "Unknown image format",
-      "forbidden": "You have no permission to perform the required action",
-      "data": "Invalid request",
-      "php": "Error on PHP server"
-    }
-  },
-  "succ": {
-    "query": {
-      "register": "You have successfully registered"
-    }
-  },
-  "bool": {
-    "1": "Yes",
-    "0": "No"
-  }
+{
+  "labels": {
+    "navbar": {
+      "left": {
+        "home": "Home",
+        "sandbox": "Sandbox",
+        "competition": "Competition",
+        "search": "Search",
+        "help": "Help",
+        "language": "Language"
+      },
+      "right": {
+        "register": "Register",
+        "login": "Log In",
+        "profile": "Profile",
+        "logout": "Log Out"
+      }
+    },
+    "forms": {
+      "fields": {
+        "nick": "Username",
+        "email": "Email",
+        "pass": "Password",
+        "pass2": "Confirm password",
+        "captcha": "Enter characters from the picture",
+        "users": "Users",
+        "competitions": "Competitions",
+        "functionalities": "Functionalities",
+        "posts": "Posts",
+        "keywords": "Key words",
+        "postContent": "Post content",
+        "compTitle": "Competition title",
+        "compDesc": "Competition description",
+        "newVal": "New value"
+      },
+      "buttons": {
+        "confirm": "Confirm",
+        "ok": "OK",
+        "search": "Search",
+        "addPost": "Add post",
+        "addComp": "Add competition"
+        "turnIntoMod": "Turn into moderator",
+        "deleteOwnProfile": "Delete your profile",
+        "deleteOtherProfile": "Delete this user's profile"
+      }
+    },
+    "sandbox": {
+      "script": "Script",
+      "input": "Entrance",
+      "output": "Exit",
+      "simulator": "Simulator",
+      "config": "Settings"
+    },
+    "competition": {
+      "title": "Competition title",
+      "startTime": "Start time",
+      "apply": "Apply",
+      "giveUp": "Give up",
+      "msgs": {
+        "applied": "You have successfully applied for the competition",
+        "gaveUp": "You have successfully signed out from the competition"
+      }
+    },
+    "functionality": {
+      "upgrade": "Upgrade",
+      "msgs": {
+        "upgraded": "You have successfully upgraded your functionality"
+      }
+    },
+    "userProfile": {
+      "nick": "Username",
+      "email": "Email",
+      "registrationDate": "Registration date",
+      "points": "Points",
+      "fullName": "Full name",
+      "desc": "Description",
+      "isMod": "Moderator"
+    }
+  },
+  "titles": {
+    "home": "Home",
+    "sandbox": "Sandbox",
+    "competition": "Competition",
+    "help": "Help",
+    "language": "Language",
+    "register": "Register",
+    "login": "Login",
+    "userProfile": "User profile"
+  },
+  "simulator": {
+    "objects": {
+      "dirt": "Dirt",
+      "rock": "Rock",
+      "tree": "Tree",
+      "animal": "Animal",
+      "bot": "Bot",
+      "coin": "Coin"
+    }
+  },
+  "errors": {
+    "error": "Error",
+    "noimpl": "The requested functionality is not implemented",
+    "singleFile": "You can select one file at most",
+    "server": {
+      "status": {
+        "400": "Illegal request",
+        "404": "Page not found",
+        "500": "Error on the server"
+      },
+      "info": {
+        "invalidURL": "Invalid URL",
+        "unknownEntry": "Unknown record type on disc"
+      }
+    },
+    "query": {
+      "passDiff": "Passwords do not match",
+      "invalidNick": "The username must consist of small Latin letters and optional dashes, mustn't begin or end with a dash and can't contain two consecutive dashes",
+      "invalidEmail": "Email address is invalid",
+      "invalidPass": "The password must have a minimum of 8 characters and a maximum of 64 characters, only visible ASCII characters, including a blank character, can be used,password must contain at least one uppercase letter and one lowercase letter, as well as a number",
+      "invalidCaptcha": "The characters you entered do not match the image or the image has expired",
+      "nickExists": "The username you entered already exists",
+      "wrongNickOrPass": "Invalid username or password",
+      "notEnoughPoints": "You don't have enough points",
+      "alreadyMod": "User is already moderator",
+      "invalidToken": "Invalid Token",
+      "invalidImg": "Unknown image format",
+      "forbidden": "You have no permission to perform the required action",
+      "data": "Invalid request",
+      "php": "Error on PHP server"
+    }
+  },
+  "succ": {
+    "query": {
+      "register": "You have successfully registered"
+    }
+  },
+  "bool": {
+    "1": "Yes",
+    "0": "No"
+  }
 }
