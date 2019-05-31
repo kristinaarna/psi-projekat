@@ -199,22 +199,28 @@ function onSigint(){
 }
 
 function loadImage(input){
-  return new Promise(res => {
-    var img;
+  return new Promise((res, rej) => {
+    let img = null;
 
-    editImage(input, '-', (w, h, g) => {
+    editImage(input, null, (w, h, g) => {
       img = g;
-    }, () => res(img));
+    }, exitCode => {
+      if(exitCode === 0) res(img);
+      else rej('invalidImg');
+    });
   });
 }
 
 function saveImage(output, img){
-  return new Promise(res => {
-    var {canvas} = img;
+  return new Promise((res, rej) => {
+    const {canvas} = img;
 
     renderImage(output, canvas.width, canvas.height, (w, h, g) => {
       g.drawImage(canvas, 0, 0);
-    }, () => res());
+    }, exitCode => {
+      if(exitCode === 0) res();
+      else rej('invalidImg');
+    });
   });
 }
 
@@ -266,7 +272,7 @@ function renderImage(output, w, h, frameFunc=O.nop, exitCb=O.nop){
 
 function editImage(input, output, frameFunc=O.nop, exitCb=O.nop){
   input = format.path(input);
-  output = format.path(output);
+  if(output !== null) output = format.path(output);
 
   getMediaParams(input, (w, h) => {
     var canvas = createCanvas(w, h);
@@ -274,17 +280,17 @@ function editImage(input, output, frameFunc=O.nop, exitCb=O.nop){
     var buffLen = w * h << 2;
     var buff = Buffer.alloc(0);
 
-    var proc1 = spawnFfmpeg(`-i "${input}" ${RGBA} -vframes 1 -`);
-    var proc2 = spawnFfmpeg(`${PIXEL_FORMAT} -s ${w}x${h} -i - -y ${TRUNC} "${output}"`, exitCb);
+    var proc1 = spawnFfmpeg(`-i "${input}" ${RGBA} -vframes 1 -`, output === null ? exitCb : O.nop);
+    var proc2 = output !== null ? spawnFfmpeg(`${PIXEL_FORMAT} -s ${w}x${h} -i - -y ${TRUNC} "${output}"`, exitCb) : null;
 
     proc1.stdout.on('data', data => {
       buff = Buffer.concat([buff, data]);
 
       if(buff.length == buffLen){
         putBuffer(g, buff);
-        frameFunc(w, h, g, proc2.stdout);
+        frameFunc(w, h, g, proc2 !== null ? proc2.stdout : null);
 
-        end(proc2, canvas.toBuffer('raw'));
+        if(proc2 !== null) end(proc2, canvas.toBuffer('raw'));
       }
     });
   });

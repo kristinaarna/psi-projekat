@@ -62,6 +62,7 @@ class Object extends Ray{
     const {grid} = this;
 
     this.tickBound = 'onTick' in this ? this.onTick.bind(this) : null;
+    this.msgBound = 'onMsg' in this ? this.onMsg.bind(this) : null;
 
     this.updateBound = 'onUpdate' in this ? type => {
       if(this.updateSym === grid.updateSym) return;
@@ -77,15 +78,7 @@ class Object extends Ray{
   }
 
   get(x, y, z){
-    let t;
-
-    switch(this.#dir){
-      case 1: [x, z] = [-z, x]; break;
-      case 2: [x, z] = [-x, -z]; break;
-      case 3: [x, z] = [z, -x]; break;
-    }
-
-    return this.grid.get(this.x + x, this.y + y, this.z + z);
+    return this.grid.getv(Vector.set(x, y, z).rotDir(this.#dir).addv(this));
   }
 
   canSee(x, y, z){
@@ -151,6 +144,16 @@ class Object extends Ray{
 
   turnRight(){
     this.dir = this.dir - 1 & 3;
+  }
+
+  send(obj, msg){
+    const {msgBound} = this;
+    if(msgBound === null) return 0;
+    return msgBound(obj, msg);
+  }
+
+  update(){
+    this.tile.update();
   }
 
   get dir(){
@@ -230,6 +233,8 @@ class Rock extends Object{
   static model = 'rock';
   static material = 'rock';
 
+  pushed = 0;
+
   constructor(tile){
     super(tile);
     this.addShape();
@@ -242,9 +247,37 @@ class Rock extends Object{
   onUpdate(){
     const {grid} = this;
 
-    if(grid.getv(Vector.navv(this, 4)).empty){
-      this.nav(4);
+    if(this.pushed){
+      this.pushed = 0;
+      this.update();
       return;
+    }
+
+    if(this.get(0, -1, 0).free)
+      this.nav(4);
+  }
+
+  onMsg(obj, msg){
+    switch(msg){
+      case 'push': {
+        if(this.get(0, -1, 0).free) return 0;
+        if(obj.get(0, 0, -1) !== this.tile) return 0;
+
+        const dx = this.x - obj.x;
+        const dz = this.z - obj.z;
+        if(this.get(dx, 0, dz).nfree) return 0;
+
+        this.nav(obj.dir);
+        obj.go();
+
+        this.pushed = 1;
+        return 1;
+        break;
+      }
+
+      default:
+        return 0;
+        break;
     }
   }
 }
@@ -302,7 +335,14 @@ class Animal extends Entity{
         break;
 
       case 1:
-        if(this.canGo() && this.safeToGo()) this.go();
+        if(this.safeToGo()){
+          if(this.canGo()){
+            this.go();
+          }else{
+            const obj = this.get(0, 0, -1).find('pushable');
+            if(obj !== null) obj.send(this, 'push');
+          }
+        }
         break;
 
       case 2:

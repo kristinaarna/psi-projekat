@@ -11,7 +11,7 @@ const Frame = require('../frame');
 const elemCtors = require('../sandbox');
 const Page = require('./page');
 
-const DEFAULT_TAB = 'simulator';
+const DEFAULT_TAB = 'script';
 
 const WIDTH = 926;
 const HEIGHT = 671;
@@ -237,43 +237,7 @@ class Sandbox extends Page{
       reng.dispose();
     });
 
-    editors.script.val = `
-      0, 1,
-      ==, =, var, [],
-      in, out, eof, #,
-
-      var(x, # 0),
-      var(y, # 0),
-      var(z, # -2),
-
-      var(null, #().null),
-
-      var(ok, [](a)(
-        ==(a, null)(0, 1)
-      )),
-
-      var(if, [](a, b, c)(
-        ok(a)(b, c)()
-      )),
-
-      var(f, []()(
-        var(a, #().get(x, y, z)),
-
-        if(a, []()(
-          var(b, a .get(# "tree")),
-
-          if(b, []()(
-            #().rotate(# 3)
-          ), []()(
-            #().rotate(# 1)
-          ))
-        )),
-
-        f()
-      ))()
-    `;
-
-    editors.input.val = `abcde`;
+    editors.script.val = LS.texts.scriptTemplate;
 
     frame.selectTab(DEFAULT_TAB);
   }
@@ -356,12 +320,15 @@ class Sandbox extends Page{
 
       case 0x05: { // Does the given tile have an object with the given traits
         if(inp.length < 5) break;
-        if(inp.length < inp[4] + 5) break;
+
+        const tlen = inp[4];
+        if(inp.length < tlen + 5) break;
+
         out.length = 0;
 
         const [x, y, z] = this.getCoords(inp);
-        const traits = O.Buffer.from(inp.slice(5, inp[4] + 5)).toString().split(' ');
-        inp.splice(0, inp[4] + 5);
+        const traits = O.Buffer.from(inp.slice(5, tlen + 5)).toString().split(' ');
+        inp.splice(0, tlen + 5);
 
         if(!bot.canSee(x, y, z)){
           out.push(1);
@@ -369,19 +336,44 @@ class Sandbox extends Page{
         }
 
         const d = bot.get(x, y, z);
-        const has = d.objs.some(obj => {
-          return traits.every(trait => {
-            return obj.is[trait];
-          });
-        });
+        const obj = d.findm(traits);
 
         out.push(0);
-        out.push(has);
+        out.push(obj !== null);
         break;
       }
 
       case 0x06: { // Send the given request to the first object with the given traits from the given tile
-        debugger;
+        if(inp.length < 5) break;
+
+        const tlen = inp[4];
+        if(inp.length < tlen + 5) break;
+
+        const mlen = inp[tlen + 5];
+        if(inp.length < tlen + mlen + 6) break;
+
+        out.length = 0;
+
+        const [x, y, z] = this.getCoords(inp);
+        const traits = O.Buffer.from(inp.slice(5, tlen + 5)).toString().split(' ');
+        const msg = O.Buffer.from(inp.slice(tlen + 6, tlen + mlen + 6)).toString();
+        inp.splice(0, tlen + mlen + 6);
+
+        if(!bot.canSee(x, y, z)){
+          out.push(1);
+          break;
+        }
+
+        const d = bot.get(x, y, z);
+        const obj = d.findm(traits);
+        if(obj === null){
+          out.push(1);
+          break;
+        }
+
+        out.push(0);
+        out.push(obj.send(bot, msg) & 255);
+        ticks = 0;
         break;
       }
 

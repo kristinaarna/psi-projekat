@@ -381,6 +381,8 @@ class RenderEngine extends O.EventEmitter{
   }
 
   dispose(){
+    this.rels();
+
     O.await(() => this.initialized).then(() => {
       this.disposed = 1;
 

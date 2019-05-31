@@ -17,12 +17,7 @@ class UserProfile extends Page{
     const me = O.lst.signedIn && data.nick === O.lst.nick;
     const editable = O.lst.signedIn && O.lst.isMod && !data.isMod;
 
-    {
-      const avatar = new elemCtors.Avatar(this, data.nick, me);
-      this.avatar = avatar;
-
-      avatar.on('')
-    }
+    this.avatar = new elemCtors.Avatar(this, data.nick, me);
 
     {
       const labels = [

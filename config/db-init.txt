@@ -57,8 +57,7 @@ CREATE TABLE Functionality (
   name                 VARCHAR(1024) NOT NULL,
   description          VARCHAR(1024) NULL,
   points               BIGINT NOT NULL,
-  PRIMARY KEY (idFunc, idUser),
-  FOREIGN KEY (idUser) REFERENCES User (idUser)
+  PRIMARY KEY (idFunc)
 );
 
 CREATE TABLE Upgrade (

@@ -22,6 +22,26 @@ class Tile extends Vector{
   get free(){ return !this.has.occupying; }
   get nfree(){ return this.has.occupying; }
 
+  find(trait){
+    for(const obj of this.objs)
+      if(obj.is[trait])
+        return obj;
+
+    return null;
+  }
+
+  findm(traits){
+    outer: for(const obj of this.objs){
+      for(const trait of traits)
+        if(!obj.is[trait])
+          continue outer;
+
+      return obj;
+    }
+
+    return null;
+  }
+
   update(){
     this.grid.updatev(this);
     return this;

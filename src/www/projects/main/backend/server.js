@@ -1,6 +1,6 @@
 'use strict';
 
-const HOST = 'localhost';
+const HOST = location.href.match(/\/([^\/\:]+)/)[1];
 const PORT = 8082;
 const ADDRESS = `http://${HOST}:${PORT}`;
 

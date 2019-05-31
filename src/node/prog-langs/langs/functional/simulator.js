@@ -71,7 +71,7 @@ class Simulator extends cs.NativeInvocation{
           break;
 
         default:
-          th.throw(new cgs.TypeError(g, `${method} is not a valid method for ${name}`));
+          th.throw(new cgs.TypeError(g, `${O.sf(method)} is not a valid method for ${name}`));
           break;
       }
 
@@ -168,7 +168,7 @@ class Tile extends cs.NativeInvocation{
     const {g, name, args, x, y, z} = this;
 
     if(args === null || args.next !== null)
-      return th.throw(new cgs.TypeError(g, `${name} exactly one argument`));
+      return th.throw(new cgs.TypeError(g, `${name} takes exactly one argument`));
 
     const ident = args.ident.str;
 
@@ -193,7 +193,7 @@ class Tile extends cs.NativeInvocation{
           break;
 
         default:
-          th.throw(new cgs.TypeError(g, `${method} is not a valid method for ${name}`));
+          th.throw(new cgs.TypeError(g, `${O.sf(method)} is not a valid method for ${name}`));
           break;
       }
 
@@ -236,7 +236,7 @@ class Object extends cs.NativeInvocation{
     const {x, y, z} = tile;
 
     if(args === null || args.next !== null)
-      return th.throw(new cgs.TypeError(g, `${name} exactly one argument`));
+      return th.throw(new cgs.TypeError(g, `${name} takes exactly one argument`));
 
     const ident = args.ident.str;
 
@@ -269,7 +269,7 @@ class Object extends cs.NativeInvocation{
           break;
 
         default:
-          th.throw(new cgs.TypeError(g, `${method} is not a valid method for ${name}`));
+          th.throw(new cgs.TypeError(g, `${O.sf(method)} is not a valid method for ${name}`));
           break;
       }
 
@@ -488,7 +488,7 @@ class GetObject extends cs.NativeInvocation{
 class SendRequest extends cs.NativeInvocation{
   static ptrsNum = this.keys(['obj']);
 
-  constructor(g, args, tile){
+  constructor(g, args, obj){
     super(g, null, null, args);
     if(g.dsr) return;
 
@@ -535,7 +535,7 @@ class SendRequest extends cs.NativeInvocation{
 
     if(this.nval){
       const buf = O.Buffer.from(`${'0'.repeat(5)}${traits}0${request}`);
-      buf[0] = 0x05;
+      buf[0] = 0x06;
       buf[1] = x.int;
       buf[2] = y.int;
       buf[3] = z.int;
@@ -548,7 +548,7 @@ class SendRequest extends cs.NativeInvocation{
     const {buf} = this.gval;
     if(buf[0] !== 0) return th.ret(new Null(g));
 
-    th.ret(obj);
+    th.ret(new Integer(g, buf[1]));
   }
 }
 

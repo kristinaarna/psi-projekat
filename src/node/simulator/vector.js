@@ -60,11 +60,12 @@ class Vector extends O.EventEmitter{
     );
   }
 
+  static set(x, y, z, dest=aux){ return dest.set(x, y, z); }
   static nav(x, y, z, dir, dest=aux){ return dest.set(x, y, z).nav(dir); }
   static navn(x, y, z, dir, dest=aux){ return dest.set(x, y, z).navn(dir); }
-
   static navv(v, dir, dest=aux){ return dest.setv(v).nav(dir); }
   static navnv(v, dir, dest=aux){ return dest.setv(v).navn(dir); }
+  static rotDir(v, dir, dest=aux){ return dest.setv(v).rotDir(dir); }
 
   clone(){ return new Vector(this.x, this.y, this.z); }
 

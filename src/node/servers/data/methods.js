@@ -3,8 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const O = require('../../omikron');
-const php = require('../../php');
 const hash = require('../../hash');
+const php = require('../../php');
+const avatar = require('../../avatar');
 const Captcha = require('./captcha');
 const Token = require('./token');
 const check = require('./check');
@@ -135,7 +136,16 @@ const methods = {
     if(!check.token(token)) throw 'data';
     if(!check.str(type)) throw 'data';
     if(!check.str(val)) throw 'data';
-    if(!O.has(editableData, type)) throw 'data';
+
+    if(!O.has(editableData, type)){
+      if(type === 'avatar'){
+        const nick = await php.exec('getNickFromToken', {token});
+        const buf = Buffer.from(val.slice(val.indexOf(',') + 1), 'base64');
+        return await avatar.update(nick, buf);
+      }
+
+      throw 'data';
+    }
 
     val = val.trim();
     if(val.length > editableData[type]) throw 'data';

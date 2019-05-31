@@ -6,7 +6,7 @@ const cp = require('child_process');
 const O = require('../omikron');
 const config = require('../config');
 const fsRec = require('../fs-rec');
-const defaultAvatar = require('../default-avatar');
+const avatar = require('../avatar');
 
 const DB_NAME = config.dbName;
 
@@ -42,7 +42,7 @@ async function main(){
   await initDB();
 
   log('Generating default avatar');
-  await generateDefaultAvatar();
+  await createDefaultAvatar();
 
   O.proc.exit();
 }
@@ -101,11 +101,8 @@ function initDB(){
   });
 }
 
-async function generateDefaultAvatar(){
-  const file = `${config.defaultAvatar}.png`;
-  const pth = path.join(config.dirs.avatars, file);
-
-  await defaultAvatar.generate(config.avatarSize, pth);
+async function createDefaultAvatar(){
+  await avatar.createDefault();
 }
 
 function err(msg){

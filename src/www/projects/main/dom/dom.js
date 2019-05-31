@@ -71,7 +71,9 @@ class DOM extends Element{
     this.#page = page;
   }
 
-  reload(){
+  reload(hard=0){
+    if(hard) return location.reload();
+
     this.loadPage().then(() => {
       this.loading = 0;
       O.raf(() => this.emit('load'));
@@ -145,9 +147,9 @@ class DOM extends Element{
     this.alert(err, cb);
   }
 
-  handle(promise, path=null){
+  handle(promise, path=null, hardReload=0){
     promise.then(() => {
-      if(path === null) this.reload();
+      if(path === null) this.reload(hardReload);
       else this.nav(path);
     }, this.err.bind(this));
   }
