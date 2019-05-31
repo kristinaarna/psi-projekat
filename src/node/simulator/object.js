@@ -17,7 +17,7 @@ class Object extends Ray{
   static model = null;
   static material = null;
 
-  static is = Object.traits([]);
+  static is = this.traits([]);
   is = this.constructor.is;
 
   #dir = 0;
@@ -42,6 +42,11 @@ class Object extends Ray{
     tile.addObj(this);
   }
 
+  static get formattedName(){
+    const {name} = this;
+    return name[0].toLowerCase() + name.slice(1);
+  }
+
   static reset(){
     objs.clear();
   }
@@ -49,6 +54,7 @@ class Object extends Ray{
   static traits(arr){
     const obj = O.obj();
     for(const trait of arr) obj[trait] = 1;
+    obj[this.formattedName] = 1;
     return obj;
   }
 
@@ -193,10 +199,12 @@ class Object extends Ray{
   getv(v){ return this.get(v.x, v.y, v.z); }
   movev(v){ return this.move(v.x, v.y, v.z); }
   rotv(v){ return this.rot(v.x, v.y, v.z); }
+
+  get name(){ return this.constructor.formattedName; }
 }
 
 class Dirt extends Object{
-  static is = Object.traits(['occupying', 'opaque', 'ground']);
+  static is = this.traits(['occupying', 'opaque', 'ground']);
   static model = 'cubeuv';
   static material = 'dirt';
 
@@ -207,7 +215,7 @@ class Dirt extends Object{
 }
 
 class Tree extends Object{
-  static is = Object.traits(['occupying']);
+  static is = this.traits(['occupying']);
   static model = 'tree';
   static material = 'tree';
 
@@ -218,7 +226,7 @@ class Tree extends Object{
 }
 
 class Rock extends Object{
-  static is = Object.traits(['occupying', 'nonFloating', 'pushable']);
+  static is = this.traits(['occupying', 'nonFloating', 'pushable']);
   static model = 'rock';
   static material = 'rock';
 
@@ -276,7 +284,7 @@ class Entity extends Object{
 }
 
 class Animal extends Entity{
-  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static is = this.traits(['occupying', 'nonFloating', 'entity']);
   static model = 'animal';
   static material = 'animal';
 
@@ -288,17 +296,17 @@ class Animal extends Entity{
   onTick(){
     this.beforeTick();
 
-    switch(O.rand(4)){
-      case 1:
+    switch(O.rand(3)){
+      case 0:
         this.dir = this.dir + (O.rand(2) ? 1 : -1) & 3;
         break;
 
-      case 2:
+      case 1:
         if(this.canGo() && this.safeToGo()) this.go();
         break;
 
-      case 3:
-        if(this.canJump()) this.jump();
+      case 2:
+        if(this.get(0, 0, -1).has.occupying && this.canJump()) this.jump();
         break;
     }
 
@@ -307,7 +315,7 @@ class Animal extends Entity{
 }
 
 class Bot extends Entity{
-  static is = Object.traits(['occupying', 'nonFloating', 'entity']);
+  static is = this.traits(['occupying', 'nonFloating', 'entity']);
   static model = 'bot';
   static material = 'bot';
 
@@ -321,7 +329,22 @@ class Bot extends Entity{
     this.reng.emit('tick', this);
     this.afterTick();
   }
-};
+}
+
+class Coin extends Entity{
+  static is = this.traits(['pickup']);
+  static model = 'coin';
+  static material = 'coin';
+
+  constructor(tile){
+    super(tile);
+    this.addShape();
+  }
+
+  onTick(){
+    this.rot(0, this.ry - O.pi / 3, 0);
+  }
+}
 
 const ctorsArr = [
   Dirt,
@@ -329,6 +352,7 @@ const ctorsArr = [
   Tree,
   Animal,
   Bot,
+  Coin,
 ];
 
 const ctors = O.obj();

@@ -56,7 +56,7 @@ class Vector extends O.EventEmitter{
     return dest.set(
       v1.x * k1 + v2.x * k,
       v1.y * k1 + v2.y * k,
-      v1.z * k1 + v2.z * k
+      v1.z * k1 + v2.z * k,
     );
   }
 
@@ -110,16 +110,24 @@ class Vector extends O.EventEmitter{
   }
 
   rotDir(dir){
-    let {x, z} = this;
+    const {x, z} = this;
 
     switch(dir){
-      case 1: [x, z] = [-z, x]; break;
-      case 2: [x, z] = [-x, -z]; break;
-      case 3: [x, z] = [z, -x]; break;
-    }
+      case 1:
+        this.x = -z;
+        this.z = x;
+        break;
 
-    this.x = x;
-    this.z = z;
+      case 2:
+        this.x = -x;
+        this.z = -z;
+        break;
+
+      case 3:
+        this.x = z;
+        this.z = -x;
+        break;
+    }
 
     return this;
   }

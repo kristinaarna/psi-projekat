@@ -46,6 +46,10 @@ class Simulator extends cs.NativeInvocation{
       const method = ident.slice(1);
 
       switch(method){
+        case 'null':
+          th.ret(new Null(g));
+          break;
+
         case 'dispatch':
           th.ret(new Dispatch(g));
           break;
@@ -62,8 +66,8 @@ class Simulator extends cs.NativeInvocation{
           th.ret(new Jump(g));
           break;
 
-        case 'canSee':
-          th.ret(new CanSeeTile(g));
+        case 'get':
+          th.ret(new GetTile(g));
           break;
 
         default:
@@ -137,6 +141,151 @@ class String extends PassiveInvocation{
 
   toString(){
     return O.sf(this.str.str);
+  }
+}
+
+class Tile extends cs.NativeInvocation{
+  static ptrsNum = this.keys(['x', 'y', 'z']);
+
+  constructor(g, args, x, y, z){
+    super(g, null, null, args);
+    if(g.dsr) return;
+
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+
+  static cmp(v1, v2){
+    return (
+      Integer.cmp(v1.x, v2.x) &&
+      Integer.cmp(v1.y, v2.y) &&
+      Integer.cmp(v1.z, v2.z)
+    );
+  }
+
+  tick(th){
+    const {g, name, args, x, y, z} = this;
+
+    if(args === null || args.next !== null)
+      return th.throw(new cgs.TypeError(g, `${name} exactly one argument`));
+
+    const ident = args.ident.str;
+
+    if(/^\..+/.test(ident)){
+      const method = ident.slice(1);
+
+      switch(method){
+        case 'x':
+          th.ret(x);
+          break;
+
+        case 'y':
+          th.ret(y);
+          break;
+
+        case 'z':
+          th.ret(z);
+          break;
+
+        case 'get':
+          th.ret(new GetObject(g, null, this));
+          break;
+
+        default:
+          th.throw(new cgs.TypeError(g, `${method} is not a valid method for ${name}`));
+          break;
+      }
+
+      return;
+    }
+
+    th.throw(new cgs.TypeError(g, `${O.sf(ident)} is not a valid argument for ${name}`));
+  }
+
+  invoke(args){
+    if(args !== null) args = args.list;
+    return new this.constructor(this.g, args, this.x, this.y, this.z);
+  }
+
+  toString(){
+    return `(${this.x}, ${this.y}, ${this.z})`;
+  }
+}
+
+class Object extends cs.NativeInvocation{
+  static ptrsNum = this.keys(['tile', 'traits']);
+
+  constructor(g, args, tile, traits){
+    super(g, null, null, args);
+    if(g.dsr) return;
+
+    this.tile = tile;
+    this.traits = traits;
+  }
+
+  static cmp(v1, v2){
+    return (
+      Tile.cmp(v1.tile, v2.tile) &&
+      String.cmp(v1.traits, v2.traits)
+    );
+  }
+
+  tick(th){
+    const {g, name, args, tile, traits} = this;
+    const {x, y, z} = tile;
+
+    if(args === null || args.next !== null)
+      return th.throw(new cgs.TypeError(g, `${name} exactly one argument`));
+
+    const ident = args.ident.str;
+
+    if(/^\..+/.test(ident)){
+      const method = ident.slice(1);
+
+      switch(method){
+        case 'tile':
+          th.ret(tile);
+          break;
+
+        case 'traits':
+          th.ret(traits);
+          break;
+
+        case 'x':
+          th.ret(x);
+          break;
+
+        case 'y':
+          th.ret(y);
+          break;
+
+        case 'z':
+          th.ret(z);
+          break;
+
+        case 'send':
+          th.ret(new SendRequest(g, null, this));
+          break;
+
+        default:
+          th.throw(new cgs.TypeError(g, `${method} is not a valid method for ${name}`));
+          break;
+      }
+
+      return;
+    }
+
+    th.throw(new cgs.TypeError(g, `${O.sf(ident)} is not a valid argument for ${name}`));
+  }
+
+  invoke(args){
+    if(args !== null) args = args.list;
+    return new this.constructor(this.g, args, this.tile, this.traits);
+  }
+
+  toString(){
+    return `${this.tile}[${this.traits}]`;
   }
 }
 
@@ -244,7 +393,7 @@ class Jump extends cs.NativeInvocation{
   }
 }
 
-class CanSeeTile extends cs.NativeInvocation{
+class GetTile extends cs.NativeInvocation{
   tick(th){
     if(this.eargs === null){
       if(this.nval) return th.call(this.evalArgs());
@@ -269,9 +418,137 @@ class CanSeeTile extends cs.NativeInvocation{
     }
 
     const {buf} = this.gval;
+    if(buf[0] !== 0 || !(buf[1] & 1)) return th.ret(new Null(g));
+
+    th.ret(new Tile(g, null, x, y, z));
+  }
+}
+
+class GetObject extends cs.NativeInvocation{
+  static ptrsNum = this.keys(['tile']);
+
+  constructor(g, args, tile){
+    super(g, null, null, args);
+    if(g.dsr) return;
+
+    this.tile = tile;
+  }
+
+  static cmp(v1, v2){
+    return Tile.cmp(v1.tile, v2.tile);
+  }
+
+  invoke(args){
+    if(args !== null) args = args.list;
+    return new this.constructor(this.g, args, this.tile);
+  }
+
+  tick(th){
+    if(this.eargs === null){
+      if(this.nval) return th.call(this.evalArgs());
+      this.eargs = this.gval;
+    }
+
+    const {g, name, args, eargs, tile} = this;
+    const {x, y, z} = tile;
+
+    if(eargs.length === 0)
+      return th.throw(new cgs.TypeError(g, `${name} takes at least 1 argument`));
+
+    let traits = '';
+
+    for(let i = 0; i != eargs.length; i++){
+      const arg = eargs.get(i);
+
+      if(!(arg instanceof String))
+        return th.throw(new cgs.TypeError(g, `${name} takes strings as arguments`));
+
+      if(i !== 0) traits += ' ';
+      traits += arg.str.str;
+    }
+
+    if(this.nval){
+      const buf = O.Buffer.from(`${'0'.repeat(5)}${traits}`);
+      buf[0] = 0x05;
+      buf[1] = x.int;
+      buf[2] = y.int;
+      buf[3] = z.int;
+      buf[4] = traits.length;
+      this.g.stdout.write(buf);
+      return th.call(new cgs.Read(g, 16));
+    }
+
+    const {buf} = this.gval;
+    if(buf[0] !== 0 || !(buf[1] & 1)) return th.ret(new Null(g));
+
+    th.ret(new Object(g, null, tile, new String(g, traits)));
+  }
+}
+
+class SendRequest extends cs.NativeInvocation{
+  static ptrsNum = this.keys(['obj']);
+
+  constructor(g, args, tile){
+    super(g, null, null, args);
+    if(g.dsr) return;
+
+    this.obj = obj;
+  }
+
+  static cmp(v1, v2){
+    return (
+      Tile.cmp(v1.tile, v2.tile) &&
+      String.cmp(v1.traits, v2.traits)
+    );
+  }
+
+  invoke(args){
+    if(args !== null) args = args.list;
+    return new this.constructor(this.g, args, this.obj);
+  }
+
+  tick(th){
+    if(this.eargs === null){
+      if(this.nval) return th.call(this.evalArgs());
+      this.eargs = this.gval;
+    }
+
+    const {g, name, args, eargs, obj} = this;
+    const {tile} = obj;
+    const {x, y, z} = tile;
+    const traits = obj.traits.str;
+
+    if(eargs.length === 0)
+      return th.throw(new cgs.TypeError(g, `${name} takes at least 1 argument`));
+
+    let request = '';
+
+    for(let i = 0; i != eargs.length; i++){
+      const arg = eargs.get(i);
+
+      if(!(arg instanceof String))
+        return th.throw(new cgs.TypeError(g, `${name} takes strings as arguments`));
+
+      if(i !== 0) request += ' ';
+      request += arg.str.str;
+    }
+
+    if(this.nval){
+      const buf = O.Buffer.from(`${'0'.repeat(5)}${traits}0${request}`);
+      buf[0] = 0x05;
+      buf[1] = x.int;
+      buf[2] = y.int;
+      buf[3] = z.int;
+      buf[4] = traits.length;
+      buf[traits.length + 5] = request.length;
+      this.g.stdout.write(buf);
+      return th.call(new cgs.Read(g, 8));
+    }
+
+    const {buf} = this.gval;
     if(buf[0] !== 0) return th.ret(new Null(g));
 
-    th.ret(this.intp.globInv.getIdentByIndex(buf[1] & 1));
+    th.ret(obj);
   }
 }
 
@@ -281,11 +558,15 @@ const ctorsArr = [
   Null,
   Integer,
   String,
+  Tile,
+  Object,
   Dispatch,
   Rotate,
   Go,
   Jump,
-  CanSeeTile,
+  GetTile,
+  GetObject,
+  SendRequest,
 ];
 
 const ctorsObj = O.obj();

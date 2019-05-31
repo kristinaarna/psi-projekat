@@ -135,8 +135,6 @@ class RenderEngine extends O.EventEmitter{
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP);
 
     const col = 169 / 255;
     gl.viewport(0, 0, w, h);
@@ -190,12 +188,14 @@ class RenderEngine extends O.EventEmitter{
         const d = grid.get(x, y, z);
 
         if(!y) return new cs.Dirt(d);
-        if((x || z) && O.rand(40) === 0) new cs.Rock(d);
+        if((x || z) && O.rand(40) === 0){
+          if(O.rand(2) == 0) new cs.Rock(d);
+          else new cs.Coin(d);
+        }
       }));
     });
 
-    new cs.Bot(grid.get(5, 1, 5).purge());
-    new cs.Rock(grid.get(9, 1, 5).purge());
+    const bot = new cs.Bot(grid.get(5, 1, 5).purge());
   }
 
   aels(){
@@ -519,8 +519,7 @@ class RenderEngine extends O.EventEmitter{
           g.textAlign = 'center';
           g.font = '16px arial';
 
-          const {name} = selectedObj;
-          const objName = O.glob.LS.simulator.objects[name[0].toLowerCase() + name.slice(1)];
+          const objName = O.glob.LS.simulator.objects[selectedObj.formattedName];
           const textWidth = g.measureText(objName).width;
 
           g.fillStyle = 'rgba(0, 0, 0, .8)';

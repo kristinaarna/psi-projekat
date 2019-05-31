@@ -31,8 +31,9 @@ class ParserBase extends SF{
     this.cache = new cgs.Array(g);
     this.parsing = new cgs.Array(g);
     this.sfDef = new ParseDef(g, this, 0, syntax.defs[MAIN_DEF]['*']);
-
     this.exec = exec;
+
+    g.stage = 0;
   }
 
   ser(s){ super.ser(s); s.write(this.exec); }

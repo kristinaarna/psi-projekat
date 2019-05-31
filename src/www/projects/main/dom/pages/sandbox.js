@@ -237,22 +237,37 @@ class Sandbox extends Page{
       reng.dispose();
     });
 
-    // frame.selectTab(DEFAULT_TAB);
-
     editors.script.val = `
       0, 1,
       ==, =, var, [],
       in, out, eof, #,
 
-      var(x, #(5)),
-      var(y, #(7)),
-      var(z, #(11)),
+      var(x, # 0),
+      var(y, # 0),
+      var(z, # -2),
 
-      var(n, ==(#(1), #(1))(#(1), #(3))),
+      var(null, #().null),
+
+      var(ok, [](a)(
+        ==(a, null)(0, 1)
+      )),
+
+      var(if, [](a, b, c)(
+        ok(a)(b, c)()
+      )),
 
       var(f, []()(
-        var(a, #().canSee(#(0), #(0), #(-2))),
-        #().rotate(a(#(1), #(3))),
+        var(a, #().get(x, y, z)),
+
+        if(a, []()(
+          var(b, a .get(# "tree")),
+
+          if(b, []()(
+            #().rotate(# 3)
+          ), []()(
+            #().rotate(# 1)
+          ))
+        )),
 
         f()
       ))()
@@ -260,7 +275,7 @@ class Sandbox extends Page{
 
     editors.input.val = `abcde`;
 
-    frame.selectTab('simulator');
+    frame.selectTab(DEFAULT_TAB);
   }
 
   static title(){ return LS.titles.sandbox; }
@@ -271,14 +286,15 @@ class Sandbox extends Page{
     const op = inp[0];
 
     switch(op){
-      case 0x00: // Dispatch
+      case 0x00: { // Dispatch
         out.length = 0;
         out.push(0);
         inp.splice(0, 1);
         ticks = 0;
         break;
+      }
 
-      case 0x01: // Rotate
+      case 0x01: { // Rotate
         if(inp.length < 2) break;
         out.length = 0;
 
@@ -293,8 +309,9 @@ class Sandbox extends Page{
         ticks = 0;
         inp.splice(0, 2);
         break;
+      }
 
-      case 0x02: // Go forward
+      case 0x02: { // Go forward
         out.length = 0;
 
         if(bot.canGo()){
@@ -307,8 +324,9 @@ class Sandbox extends Page{
         inp.splice(0, 1);
         ticks = 0;
         break;
+      }
 
-      case 0x03: // Jump
+      case 0x03: { // Jump
         out.length = 0;
 
         if(bot.canJump()){
@@ -321,8 +339,9 @@ class Sandbox extends Page{
         inp.splice(0, 1);
         ticks = 0;
         break;
+      }
 
-      case 0x04: // Can see tile
+      case 0x04: { // Can the bot see the given tile
         if(inp.length < 4) break;
         out.length = 0;
 
@@ -333,18 +352,45 @@ class Sandbox extends Page{
 
         inp.splice(0, 4);
         break;
+      }
 
-      case 0x05:
+      case 0x05: { // Does the given tile have an object with the given traits
+        if(inp.length < 5) break;
+        if(inp.length < inp[4] + 5) break;
+        out.length = 0;
+
+        const [x, y, z] = this.getCoords(inp);
+        const traits = O.Buffer.from(inp.slice(5, inp[4] + 5)).toString().split(' ');
+        inp.splice(0, inp[4] + 5);
+
+        if(!bot.canSee(x, y, z)){
+          out.push(1);
+          break;
+        }
+
+        const d = bot.get(x, y, z);
+        const has = d.objs.some(obj => {
+          return traits.every(trait => {
+            return obj.is[trait];
+          });
+        });
+
+        out.push(0);
+        out.push(has);
         break;
+      }
 
-      case 0x06:
+      case 0x06: { // Send the given request to the first object with the given traits from the given tile
+        debugger;
         break;
+      }
 
-      default:
+      default: {
         out.length = 0;
         out.push(1);
         ticks = 0;
         break;
+      }
     }
 
     return ticks;

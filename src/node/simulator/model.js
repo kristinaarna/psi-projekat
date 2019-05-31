@@ -13,6 +13,7 @@ const models = [
   'tree',
   'animal',
   'bot',
+  'coin',
 ];
 
 class Model{

@@ -18,6 +18,7 @@ class Machine{
 
   get lang(){ return this.#lang; }
   get script(){ return this.#script; }
+  get prog(){ return this.#prog; }
   get stdin(){ return this.#prog.stdin; }
   get stdout(){ return this.#prog.stdout; }
   get stderr(){ return this.#prog.stderr; }

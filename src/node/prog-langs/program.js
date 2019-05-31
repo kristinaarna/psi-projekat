@@ -22,6 +22,8 @@ class Program extends SG{
   #lang = null;
   #intp = null;
 
+  stage = 0;
+
   constructor(lang, source, maxSize, criticalSize=null){
     super(lang.graphCtors, lang.graphRefs, maxSize);
 

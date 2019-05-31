@@ -317,8 +317,6 @@ class Node{
   constructor(graph){
     this.#graph = graph;
     graph.addNode(this);
-
-    // if(this.id === 15) throw new Error();
   }
 
   static keys(keys){

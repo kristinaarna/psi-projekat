@@ -17,11 +17,13 @@ class CompilerBase extends SF{
     if(g.dsr) return;
 
     this.ast = ast;
+    g.stage = 1;
   }
 
   tick(th){
     if(this.i++ === 0) return th.call(new CompileDef(this.g, this, this.ast.node));
     th.call(this.rval, 1);
+    this.g.stage = 2;
   }
 }
 

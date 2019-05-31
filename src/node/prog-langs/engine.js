@@ -6,8 +6,6 @@ const O = require('../omikron');
 const format = require('../format');
 const Machine = require('./machine');
 
-const DEBUG = 0;
-
 class Engine{
   #machine;
 
@@ -32,23 +30,20 @@ class Engine{
 
   run(ticks=null){
     const machine = this.#machine;
-    this.paused = 0;
+    const g = this.#machine.prog;
 
-    const t = O.now();
-    let n = 0n;
+    this.paused = 0;
 
     try{
       while(this.active){
-        if(ticks !== null && ticks-- === 0){
+        if(g.stage === 2 && ticks !== null && ticks-- === 0){
           ticks++;
           break;
         }
 
         this.tick();
-        n++;
       }
     }catch(err){
-      throw err;
       let msg;
 
       if(err instanceof Error){
@@ -58,12 +53,6 @@ class Engine{
       }
 
       this.stderr.write(msg);
-    }
-
-    if(DEBUG && this.done){
-      log(`Time: ${format.time((O.now() - t) / 1e3 + .5 | 0)}`);
-      log(`Instructions: ${format.num(n)}`);
-      log();
     }
 
     this.paused = 1;

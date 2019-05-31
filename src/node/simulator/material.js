@@ -14,6 +14,7 @@ const textures = {
   tree: './textures/tree.png',
   animal: './textures/animal.png',
   bot: './textures/bot.png',
+  coin: './textures/coin.png',
 };
 
 class Material{
