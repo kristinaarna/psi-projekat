@@ -232,23 +232,23 @@ class Image extends Element{
   tag(){ return 'img'; }
 }
 
-Element.Div = Div;
-Element.Left = Left;
-Element.Right = Right;
-Element.Text = Text;
-Element.Span = Span;
-Element.Input = Input;
-Element.InputText = InputText;
-Element.InputPass = InputPass;
-Element.InputTextarea = InputTextarea;
-Element.InputDropdown = InputDropdown;
-Element.InputFile = InputFile;
-Element.Link = Link;
-Element.Heading = Heading;
-Element.Title = Title;
-Element.Rectangle = Rectangle;
-Element.Region = Region;
-Element.Button = Button;
-Element.Image = Image;
-
-module.exports = Element;
+module.exports = Object.assign(Element, {
+  Div,
+  Left,
+  Right,
+  Text,
+  Span,
+  Input,
+  InputText,
+  InputPass,
+  InputTextarea,
+  InputDropdown,
+  InputFile,
+  Link,
+  Heading,
+  Title,
+  Rectangle,
+  Region,
+  Button,
+  Image,
+});
