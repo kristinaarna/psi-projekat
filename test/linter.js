@@ -33,6 +33,7 @@ const allExts = textExts.concat([
   'erwin',
   'obj',
   'hex',
+  'mdj',
 ]);
 
 const latLower = O.ca(26, i => O.sfcc(i + O.cc('a'))).join('');

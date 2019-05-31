@@ -5,7 +5,7 @@ const Element = require('../element');
 const Page = require('./page');
 const Form = require('../form');
 
-class Login extends Page{
+class Language extends Page{
   constructor(parent){
     super(parent);
 
@@ -29,4 +29,4 @@ class Login extends Page{
   css(){ return 'page-language'; }
 }
 
-module.exports = Login;
+module.exports = Language;

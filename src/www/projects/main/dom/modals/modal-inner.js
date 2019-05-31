@@ -3,8 +3,8 @@
 const LS = require('../../strings');
 const Element = require('../element');
 
-class Modal extends Element.Div{
+class ModalInner extends Element.Div{
   css(){ return 'modal-inner'; }
 }
 
-module.exports = Modal;
+module.exports = ModalInner;
