@@ -6,7 +6,7 @@ const O = require('../../omikron');
 const config = require('../../config');
 const media = require('../../media');
 const randStr = require('../../rand-str');
-const Token = require('./token');
+const Token = require('../../token');
 
 const FILE_EXT = 'png';
 const ID_MAX = 1n << 64n;

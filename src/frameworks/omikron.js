@@ -1647,7 +1647,7 @@ class Buffer extends Uint8Array{
     return new O.Buffer(size);
   }
 
-  static from(data, encoding='utf8'){
+  static from(data, encoding='utf8', mode=0){
     if(data.length === 0)
       return O.Buffer.alloc(0);
 
@@ -1658,7 +1658,7 @@ class Buffer extends Uint8Array{
         break;
 
       case 'base64':
-        return O.base64.decode(data);
+        return O.base64.decode(data, mode);
         break;
 
       case 'utf8':
@@ -1714,14 +1714,14 @@ class Buffer extends Uint8Array{
     this[offset + 3] = val;
   }
 
-  toString(encoding='utf8'){
+  toString(encoding='utf8', mode=0){
     switch(encoding){
       case 'hex':
         return Array.from(this).map(a => a.toString(16).padStart(2, '0')).join('');
         break;
 
       case 'base64':
-        return O.base64.encode(this);
+        return O.base64.encode(this, mode);
         break;
 
       case 'utf8':
@@ -1810,7 +1810,7 @@ class IO{
 
       if(j === 32){
         hash = O.sha256(hash);
-        j = 0;
+        j = -1;
       }
     }
 
@@ -1827,7 +1827,7 @@ class IO{
 
       if(j === 32){
         hash = O.sha256(hash);
-        j = 0;
+        j = -1;
       }
 
       if(++cnt === 1e5){
@@ -2180,6 +2180,7 @@ const O = {
   pih: Math.PI / 2,
   pi3: Math.PI * 3,
   pi32: Math.PI * 3 / 2,
+  pi34: Math.PI * 3 / 4,
 
   static: Symbol('static'),
   project: null,
@@ -2209,6 +2210,11 @@ const O = {
   // Global data
 
   glob: null,
+
+  // Time simulation
+
+  time: 0,
+  animFrameCbs: [],
 
   // Symbols
 
@@ -2596,7 +2602,7 @@ const O = {
 
   urlTime(url){
     var char = url.indexOf('?') !== -1 ? '&' : '?';
-    return `${url}${char}_=${O.now()}`;
+    return `${url}${char}_=${O.now}`;
   },
 
   rf(file, isBinary, cb=null){
@@ -2650,8 +2656,8 @@ const O = {
   },
 
   async readFile(file){
-    if(O.isBrowser) return O.rfAsync(file);
-    return O.rfs(file, 1);
+    if(O.isNode || O.isElectron) return O.rfs(file, 1);
+    return O.rfAsync(file);
   },
 
   async req(path){
@@ -2663,8 +2669,8 @@ const O = {
 
     if(path in cache) return cache[path];
 
-    if(path.endsWith('.js')){
-      data = await O.rfAsync(path);
+    if(/\.[^\/]+$/.test(path)){
+      data = await O.rfAsync(path, path.endsWith('.hex'));
     }else if((data = await O.rfAsync(`${path}.js`)) !== null){
       type = 2;
       path += '.js';
@@ -2965,7 +2971,7 @@ const O = {
     if(O.rseed !== null){
       write(O.rseed);
     }else{
-      write(O.now());
+      write(O.now);
       write(Math.random() * 2 ** 64);
     }
 
@@ -3030,8 +3036,8 @@ const O = {
   },
 
   sleep(time){
-    const t = O.now();
-    while(O.now() - t < time);
+    const t = O.now;
+    while(O.now - t < time);
   },
 
   sleepa(time){
@@ -3172,7 +3178,7 @@ const O = {
     return O.Buffer.from(arr);
   },
 
-  date(date=O.now()){
+  date(date=O.now){
     date = new Date(date);
 
     const year = date.getFullYear();
@@ -3188,7 +3194,6 @@ const O = {
   sortAsc(arr){ return arr.sort((elem1, elem2) => elem1 > elem2 ? 1 : elem1 < elem2 ? -1 : 0); },
   sortDesc(arr){ return arr.sort((elem1, elem2) => elem1 > elem2 ? -1 : elem1 < elem2 ? 1 : 0); },
   undupe(arr){ return arr.filter((a, b, c) => c.indexOf(a) === b); },
-  raf(func){ return window.requestAnimationFrame(func); },
   obj(proto=null){ return Object.create(proto); },
   keys(obj){ return Reflect.ownKeys(obj); },
   cc(char, index=0){ return char.charCodeAt(index); },
@@ -3200,7 +3205,29 @@ const O = {
   rev(str){ return str.split('').reverse().join(''); },
   has(obj, key){ return Object.hasOwnProperty.call(obj, key); },
   desc(obj, key){ return Object.getOwnPropertyDescriptor(obj, key); },
-  now(){ return Date.now(); },
+
+  /*
+    Time simulation
+  */
+
+  get now(){
+    if(O.isElectron) return O.time;
+    return Date.now();
+  },
+
+  raf(func){
+    if(O.isElectron) O.animFrameCbs.push(func);
+    else window.requestAnimationFrame(func);
+    return func;
+  },
+
+  animFrame(){
+    const cbs = O.animFrameCbs;
+    const cbsCopy = cbs.slice();
+
+    cbs.length = 0;
+    for(const cb of cbsCopy) cb();
+  },
 
   /*
     Node functions
@@ -3492,15 +3519,25 @@ const O = {
       });
 
       const m = buf.length % 3;
-      if(m !== 0) str += char(val) + '='.repeat(3 - m);
+
+      if(m !== 0){
+        str += char(val);
+        if(mode === 0) str += '='.repeat(3 - m);
+      }
 
       return str;
     };
 
     const decode = (str, mode=0) => {
-      const pad = str.match(/\=*$/)[0].length;
-      const extraBytes = pad !== 0 ? pad : 0;
-      const len = (str.length >> 2) * 3 - extraBytes;
+      let length = (str.length >> 2) * 3;
+
+      if(mode === 0){
+        const pad = str.match(/\=*$/)[0].length;
+        const extraBytes = pad !== 0 ? pad : 0;
+        length -= extraBytes;
+      }
+
+      const len = length;
       const buf = O.Buffer.alloc(len);
 
       str += str;
@@ -3571,7 +3608,8 @@ const O = {
     if(args.length !== 0)
       log(...args);
 
-    O.proc.exit();
+    if(O.isNode) O.proc.exit();
+    else window.close();
   },
 
   // Function which does nothing

@@ -5,6 +5,7 @@ const path = require('path');
 const cp = require('child_process');
 const O = require('../omikron');
 const config = require('../config');
+const hash = require('../hash');
 const fsRec = require('../fs-rec');
 const avatar = require('../avatar');
 
@@ -69,7 +70,33 @@ function adaptSQLScript(){
     drop database if exists \`${DB_NAME}\`;
     create database \`${DB_NAME}\` character set utf32 collate utf32_general_ci;
     use \`${DB_NAME}\`;
-  `.trim()).map(a => a.trim()).join('\n')}\n\n${src}`;
+
+    ${src}
+
+    insert into user (
+      nick,
+      passHash,
+      email,
+      displayEmail,
+      isMod,
+      token,
+      registrationDate,
+      points,
+      fullName,
+      description
+    ) values (
+      'root',
+      '${hash('', 'sha512').toString('base64')}',
+      '',
+      0,
+      1,
+      null,
+      ${O.now},
+      0,
+      null,
+      null
+    );
+  `.trim()).map(a => a.trim()).join('\n')}`;
 
   O.wfs(dbInitFile, O.crlf(src));
 }

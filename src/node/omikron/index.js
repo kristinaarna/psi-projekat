@@ -62,10 +62,26 @@ function initElectron(){
   const electron = require('electron');
   const ipc = electron.ipcRenderer;
 
-  console.log = (...args) => void ipc.send('log', args);
-  console.info = (...args) => void ipc.send('info', args);
-  console.error = (...args) => void ipc.send('error', args);
-  console.logRaw = data => void ipc.send('logRaw', data);
+  const {log, info, error} = console;
+
+  console.log = (...args) => {
+    log(...args);
+    ipc.send('log', args);
+  };
+
+  console.info = (...args) => {
+    info(...args);
+    ipc.send('info', args);
+  };
+
+  console.error = (...args) => {
+    error(...args);
+    ipc.send('error', args);
+  };
+
+  console.logRaw = data => {
+    ipc.send('logRaw', data);
+  };
 
   let catched = 0;
 

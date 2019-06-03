@@ -1,5 +1,6 @@
 'use strict';
 
+const O = require('../omikron');
 const Shape = require('./shape');
 const Material = require('./material');
 const Model = require('./model');
@@ -90,12 +91,21 @@ class Object extends Ray{
     const v = new Vector(x, y, z);
     const {lenm} = v;
 
-    const v1 = Vector.from(this).add(.5, .5, .5);
-    const v2 = v.clone().rotDir(dir).norm();
-    const ray = new DiscreteRay(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
-    const d = this.grid.trace(ray, lenm, 1, 0);
+    for(let i = 0; i !== 3; i++){
+      const v1 = Vector.from(this).add(.5, .5, .5);
+      const v2 = v.clone().rotDir(dir);
 
-    return d === null || Vector.from(d).subv(this).lenm === lenm;
+      if(i === 0) v2.x -= Math.sign(v2.x) * .25;
+      else if(i === 1) v2.y -= Math.sign(v2.y) * .25;
+      else if(i === 2) v2.z -= Math.sign(v2.z) * .25;
+
+      const ray = new DiscreteRay(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
+      const d = this.grid.trace(ray, lenm, 1, 0);
+
+      if(d === null || Vector.from(d).subv(this).lenm === lenm) return 1;
+    }
+
+    return 0;
   }
 
   canJump(){
@@ -359,15 +369,47 @@ class Bot extends Entity{
   static model = 'bot';
   static material = 'bot';
 
-  constructor(tile){
+  static id = 0;
+  id = this.constructor.id++;
+
+  #user = null;
+  #points;
+
+  constructor(tile, dir){
     super(tile);
-    this.addShape();
+
+    if(O.isElectron) this.#user = this.reng.compData.users[this.id];
+    const user = this.#user;
+
+    const material = Material[
+      user !== null ?
+        `bot[${user.nick}]` :
+        'bot'
+    ];
+
+    this.addShape(new Shape(Model.bot, material));
+
+    this.dir = dir;
+    this.prev.ry = this.ry;
+
+    this.#points = user !== null ? user.points : 0;
   }
 
   onTick(){
     this.beforeTick();
     this.reng.emit('tick', this);
     this.afterTick();
+  }
+
+  get points(){
+    return this.#points;
+  }
+
+  set points(points){
+    const user = this.#user;
+
+    this.#points = points;
+    if(user !== null) user.points = points;
   }
 }
 
@@ -383,6 +425,23 @@ class Coin extends Entity{
 
   onTick(){
     this.rot(0, this.ry - O.pi / 3, 0);
+  }
+
+  onMsg(obj, msg){
+    switch(msg){
+      case 'collect': {
+        if(obj.tile !== this.tile) return 0;
+
+        this.remove();
+        obj.points++;
+        return 1;
+        break;
+      }
+
+      default:
+        return 0;
+        break;
+    }
   }
 }
 

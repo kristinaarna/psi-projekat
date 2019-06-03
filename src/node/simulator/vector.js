@@ -1,5 +1,7 @@
 'use strict';
 
+const O = require('../omikron');
+
 const {abs, sqrt, sin, cos} = Math;
 
 class Vector extends O.EventEmitter{

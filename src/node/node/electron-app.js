@@ -1,10 +1,10 @@
 'use strict';
 
-const DEBUG = 0;
-
 const fs = require('fs');
 const path = require('path');
 const electron = require('electron');
+
+const DEBUG = process.argv.includes('visual');
 
 const size = 500;
 

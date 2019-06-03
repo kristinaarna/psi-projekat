@@ -2,19 +2,22 @@
 
 const fs = require('fs');
 const path = require('path');
+const O = require('../omikron');
 
 const LOADING_SPEED = 1e5;
 const TIME_TO_WAIT = 16;
 
 const dd = 1e-3;
 
-const models = [
+const modelNames = [
   'rock',
   'tree',
   'animal',
   'bot',
   'coin',
 ];
+
+const cwd = __dirname;
 
 class Model{
   constructor(verts, norms, tex){
@@ -23,6 +26,47 @@ class Model{
     this.tex = tex;
 
     this.len = verts.length / 3 | 0;
+  }
+
+  static async init(){
+    const speed = LOADING_SPEED;
+    let cnt = 0;
+
+    for(const name of modelNames){
+      let buf1;
+      if(O.isElectron){
+        const file = path.join(cwd, './models', `${name}.hex`);
+        buf1 = O.rfs(file);
+      }else{
+        const file = path.join('./models', `${name}.hex`);
+        const buf2 = require(file);
+        buf1 = buf2;
+      }
+      const buf = buf1;
+      const ser = new O.Serializer(buf);
+      const len = ser.readUint();
+      const len1 = len - 1;
+
+      const verts = new Float32Array(len * 3);
+      const norms = new Float32Array(len * 3);
+      const tex = new Float32Array(len * 2);
+
+      for(const arr of [verts, norms, tex]){
+        for(let i = 0; i !== arr.length; i++){
+          arr[i] = ser.readFloat();
+
+          if(++cnt === speed){
+            await O.waita(TIME_TO_WAIT);
+            cnt = 0;
+          }
+        }
+      }
+
+      const model = new Model(verts, norms, tex);
+
+      const key = name.replace(/\-./g, a => a[1].toUpperCase());
+      exported[key] = model;
+    }
   }
 };
 
@@ -121,51 +165,13 @@ class Cuboid extends Model{
   }
 };
 
-const ms = await loadModels();
-
-module.exports = Object.assign(Model, {
-  Rectangle,
-  Cuboid,
-
+const models = {
   square: new Rectangle(-.5, -.5, -.5, 1, 1),
   cube: new Cuboid(-.5, -.5, -.5, 1, 1, 1, 0),
   cubeuv: new Cuboid(-.5, -.5, -.5, 1, 1, 1, 1),
-}, ms);
+};
 
-async function loadModels(){
-  const ms = O.obj();
-
-  const speed = LOADING_SPEED;
-  let cnt = 0;
-
-  for(const name of models){
-    const file = path.join('./models', name);
-
-    const buf = require(file);
-    const ser = new O.Serializer(buf);
-    const len = ser.readUint();
-    const len1 = len - 1;
-
-    const verts = new Float32Array(len * 3);
-    const norms = new Float32Array(len * 3);
-    const tex = new Float32Array(len * 2);
-
-    for(const arr of [verts, norms, tex]){
-      for(let i = 0; i !== arr.length; i++){
-        arr[i] = ser.readFloat();
-
-        if(++cnt === speed){
-          await O.waita(TIME_TO_WAIT);
-          cnt = 0;
-        }
-      }
-    }
-
-    const model = new Model(verts, norms, tex);
-
-    const key = name.replace(/\-./g, a => a[1].toUpperCase());
-    ms[key] = model;
-  }
-
-  return ms;
-}
+const exported = module.exports = Object.assign(Model, {
+  Rectangle,
+  Cuboid,
+}, models);

@@ -86,11 +86,11 @@ async function update(nick, buf){
       media.renderImage(file, s, s, (w, h, g) => {
         g.clearRect(0, 0, w, h);
 
-        const sx = w1 / w;
-        const sy = h1 / h;
-        const s = Math.max(sx, sy);
-        const w2 = w1 / s;
-        const h2 = h1 / s;
+        const sx = w / w1;
+        const sy = h / h1;
+        const s = Math.min(sx, sy);
+        const w2 = w1 * s;
+        const h2 = h1 * s;
         const x = (w - w2) / 2;
         const y = (h - h2) / 2;
 

@@ -42,6 +42,10 @@ class Frame extends Element.Div{
     return this.tabs.find(tab => tab.name === name);
   }
 
+  getContent(name){
+    return this.contents[this.getTabIndex(name)];
+  }
+
   getTabIndex(name){
     return this.tabs.findIndex(tab => tab.name === name);
   }

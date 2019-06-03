@@ -26,7 +26,7 @@
       }
 
       $st = $pdo->prepare('
-        select idComp as id, title, description as `desc`, startDate as date, (
+        select idComp as id, title, description as `desc`, startDate as date, maxUsers, currentUsers, (
           select count(*) from Participating
           where user = ? and comp = idComp
         ) as applied

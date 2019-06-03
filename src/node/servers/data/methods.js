@@ -5,15 +5,29 @@ const path = require('path');
 const O = require('../../omikron');
 const hash = require('../../hash');
 const php = require('../../php');
+const echo = require('../../echo');
 const avatar = require('../../avatar');
+const Token = require('../../token');
+const langsList = require('../../prog-langs/langs-list');
 const Captcha = require('./captcha');
-const Token = require('./token');
 const check = require('./check');
 const editableData = require('./editable-user-data');
 
 const ALLOW_DELETING_PROFILE = 1;
 
+const SCRIPT_IDENTIFIER = 'ai-playground.user-script';
+const SCRIPT_VERSION = 1;
+
 const methods = {
+  async echo(str){
+    if(!check.str(str)) throw 'data';
+
+    const buf = Buffer.from(str, 'base64');
+    const token = echo.set(buf);
+
+    return token;
+  },
+
   async getPosts(keywords){
     if(!check.text(keywords)) throw 'data';
     return await php.exec('getPosts', {keywords});
@@ -101,10 +115,27 @@ const methods = {
     return await php.exec('getUserData', {nick});
   },
 
-  async applyForCompetition(token, idComp){
+  async applyForCompetition(token, idComp, scriptData){
     if(!check.token(token)) throw 'data';
     if(!check.id(idComp)) throw 'data';
-    await php.exec('applyForCompetition', {token, idComp});
+    if(!check.str(scriptData)) throw 'data';
+
+    const msg = 'invalidScript';
+    const buf = Buffer.from(scriptData, 'base64');
+    let s = null;
+
+    try{ s = new O.Serializer(buf, 1); }catch{}
+    if(s === null) throw msg;
+
+    const ser = s;
+    if(ser.readStr() !== SCRIPT_IDENTIFIER) throw msg;
+    if(ser.readUint() !== SCRIPT_VERSION) throw msg;
+
+    const lang = ser.readStr();
+    if(!O.has(langsList, lang)) throw msg;
+
+    const script = ser.readStr();
+    await php.exec('applyForCompetition', {token, idComp, lang, script});
   },
 
   async giveUpFromCompetition(token, idComp){
@@ -125,11 +156,12 @@ const methods = {
     await php.exec('addPost', {token, content});
   },
 
-  async addCompetition(token, title, desc){
+  async addCompetition(token, title, desc, startDate, maxUsers){
     if(!check.token(token)) throw 'data';
     if(!check.sstr(title)) throw 'data';
-    if(!check.text(desc)) throw 'data';
-    await php.exec('addCompetition', {token, title, desc});
+    if(!check.date(startDate)) throw 'data';
+    if(!check.int(maxUsers, 1, 1e5)) throw 'invalidNum';
+    await php.exec('addCompetition', {token, title, desc, startDate, maxUsers});
   },
 
   async editUserData(token, type, val){
@@ -140,7 +172,7 @@ const methods = {
     if(!O.has(editableData, type)){
       if(type === 'avatar'){
         const nick = await php.exec('getNickFromToken', {token});
-        const buf = Buffer.from(val.slice(val.indexOf(',') + 1), 'base64');
+        const buf = Buffer.from(val, 'base64');
         return await avatar.update(nick, buf);
       }
 

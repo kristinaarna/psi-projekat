@@ -7,6 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
 const O = require('../omikron');
+if(!O.isElectron) return;
+
 const config = require('../config');
 const nodeCanvas = require('../canvas');
 const logSync = require('../log-sync');
@@ -205,7 +207,7 @@ function loadImage(input){
     editImage(input, null, (w, h, g) => {
       img = g;
     }, exitCode => {
-      if(exitCode === 0) res(img);
+      if(exitCode === 0 && img !== null) res(img);
       else rej('invalidImg');
     });
   });
@@ -296,14 +298,16 @@ function editImage(input, output, frameFunc=O.nop, exitCb=O.nop){
   });
 }
 
-function renderVideo(output, w, h, fps, fast, frameFunc=O.nop, exitCb=O.nop){
+function renderVideo(output, w, h, fps, fast, frameFunc=O.nop, exitCb=O.nop, vflip=0){
   output = format.path(output);
 
   var canvas = createCanvas(w, h);
   var g = canvas.getContext('2d');
   var f = 0;
 
-  var proc = spawnFfmpeg(`${PIXEL_FORMAT} -s ${w}x${h} -framerate ${fps} -i - -y -framerate ${fps} ${
+  var proc = spawnFfmpeg(`${PIXEL_FORMAT} -s ${w}x${h} -framerate ${fps} -i - -y -framerate ${fps}${
+    vflip ? ' -vf vflip' : ''
+  } ${
     fast ? FAST_PRESET : HD_PRESET
   } ${TRUNC} "${output}"`, exitCb);
 
@@ -311,10 +315,10 @@ function renderVideo(output, w, h, fps, fast, frameFunc=O.nop, exitCb=O.nop){
 
   function frame(){
     var value = frameFunc(w, h, g, ++f);
-    var buff;
+    var buf;
 
     if(value instanceof Buffer){
-      buff = value;
+      buf = value;
     }else if(value === null){
       f--;
       setTimeout(frame);
@@ -323,11 +327,11 @@ function renderVideo(output, w, h, fps, fast, frameFunc=O.nop, exitCb=O.nop){
       end(proc);
       return;
     }else{
-      buff = canvas.toBuffer('raw');
+      buf = canvas.toBuffer('raw');
     }
 
-    if(value) write(proc, buff, frame);
-    else end(proc, buff);
+    if(value) write(proc, buf, frame);
+    else end(proc, buf);
   }
 }
 
@@ -746,8 +750,10 @@ function end(proc, buff, cb){
 }
 
 function getTempDir(){
-  if(tempDir === null)
-    tempDir = require('../temp-dir')(__filename);
+  if(tempDir === null){
+    const req = require;
+    tempDir = req('../temp-dir')(__filename);
+  }
 
   return tempDir;
 }

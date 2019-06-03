@@ -7,6 +7,10 @@
   --semi-transparent: rgba(255, 255, 255, .5);
 }
 
+*{
+  font-family: "Segoe UI";
+}
+
 html{
   width: 100%;
   height: 100%;
@@ -24,6 +28,13 @@ body{
     #fff,
     #0ff
   );
+}
+
+.hidden{
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .fade-in-out{
@@ -97,10 +108,6 @@ body{
 
 .float-right{
   float: right;
-}
-
-.text{
-  font-family: "Segoe UI";
 }
 
 .heading{
@@ -245,6 +252,7 @@ body{
 .textarea{
   height: 80px;
   resize: none;
+  font-family: monospace;
 }
 
 .form .input{
@@ -356,11 +364,11 @@ body{
 }
 
 .tab{
-  padding: 8px;
+  display: inline-block;
+  padding: 6px 8px;
   border: 1px solid;
   margin-right: -1px;
   margin-bottom: -1px;
-  display: inline-block;
   border-radius: var(--border-radius);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -403,4 +411,18 @@ body{
   border: 1px solid;
   border-radius: var(--border-radius);
   border-top-left-radius: 0;
+}
+
+.sandbox-option-container{
+  margin-left: 10px;
+}
+
+.sandbox-option-container input{
+  width: 210px;
+}
+
+.sandbox-option-container input[type="text"]{
+  height: 21px;
+  margin-bottom: 0px;
+  padding: 0px;
 }

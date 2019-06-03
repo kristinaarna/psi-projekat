@@ -20,7 +20,9 @@ class Program extends SG{
   stderr = new StdIO();
 
   #lang = null;
+  #source = null;
   #intp = null;
+  #inited = 0;
 
   stage = 0;
 
@@ -34,14 +36,7 @@ class Program extends SG{
     this.Interpreter = lang.Interpreter;
 
     this.#lang = lang;
-
-    const srcStr = new cgs.String(this, source);
-    const fileName = cgs.str(this, DEFAULT_FILE_NAME);
-    const script = new cgs.Script(this, srcStr, fileName);
-    this.#intp = new lang.Interpreter(this, script).persist();
-
-    this.calledGC = 0;
-    this.checkSize();
+    this.#source = source;
   }
 
   setIntp(intp){
@@ -52,10 +47,23 @@ class Program extends SG{
   get lang(){ return this.#lang; }
   get intp(){ return this.#intp; }
   get th(){ return this.#intp.th; }
-  get active(){ return this.#intp.active; }
-  get done(){ return this.#intp.done; }
+  get active(){ return !this.#inited || this.#intp.active; }
+  get done(){ return this.#inited && this.#intp.done; }
 
   tick(){
+    if(!this.#inited){
+      const srcStr = new cgs.String(this, this.#source);
+      const fileName = cgs.str(this, DEFAULT_FILE_NAME);
+      const script = new cgs.Script(this, srcStr, fileName);
+      this.#intp = new this.#lang.Interpreter(this, script).persist();
+
+      this.calledGC = 0;
+      this.checkSize();
+
+      this.#inited = 1;
+      return;
+    }
+
     this.#intp.tick();
     this.checkSize();
   }
@@ -80,7 +88,11 @@ class Program extends SG{
     if(DEBUG) log(`[GC] ${format.num(size)} ---> ${format.num(this.size)} (${format.num(this.size - size)})`);
 
     if(this.size > max)
-      throw new RangeError('Out of memory');
+      this.onError();
+  }
+
+  onError(){
+    throw new RangeError('Out of memory');
   }
 }
 

@@ -11,6 +11,7 @@ const server = require('./server');
 */
 
 const methods = [
+  'echo',
   'getPosts',
   'getCompetitions',
   'getFunctionalities',

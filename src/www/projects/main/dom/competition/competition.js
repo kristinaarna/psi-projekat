@@ -8,17 +8,17 @@ const CompetitionDate = require('./date');
 const CompetitionDescription = require('./desc');
 
 class Competition extends Element.Region{
-  constructor(parent, id, title, date, desc, applied){
+  constructor(parent, id, title, date, desc, maxUsers, currentUsers, applied){
     super(parent);
 
     this.id = id;
-    this.title = new CompetitionTitle(this, title);
+    this.title = new CompetitionTitle(this, title, maxUsers, currentUsers);
     this.date = new CompetitionDate(this, date);
     this.desc = new CompetitionDescription(this, desc);
 
     this.applied = applied;
 
-    if(O.lst.signedIn){
+    if(O.lst.signedIn && (applied || currentUsers !== maxUsers)){
       this.right = new Element.Right(this);
       this.btn = new Form.ButtonConfirm(this.right);
       this.updateBtn();

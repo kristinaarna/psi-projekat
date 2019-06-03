@@ -5,6 +5,7 @@ const path = require('path');
 const http = require('http');
 const O = require('../../omikron');
 const config = require('../../config');
+const echo = require('../../echo');
 const Server = require('../server');
 const Captcha = require('../data/captcha');
 
@@ -79,6 +80,17 @@ class HTTPServer extends Server{
     try{
       if(/^(?:omikron|framework)\.js$/.test(pth))
         return send(O.dirs.omikron);
+
+      if(pth === 'echo'){
+        const match = url.match(/[\?\&]token=([^\&]*)/);
+        if(match === null) e404();
+
+        const token = match[1];
+        const buf = echo.get(token);
+        if(buf === null) e404();
+
+        return res.end(buf);
+      }
 
       if(pth === 'captcha'){
         const match = url.match(/[\?\&]token=([^\&]*)/);

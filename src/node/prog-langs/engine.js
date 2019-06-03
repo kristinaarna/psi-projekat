@@ -34,7 +34,7 @@ class Engine{
 
     this.paused = 0;
 
-    // try{
+    try{
       while(this.active){
         if(g.stage === 2 && ticks !== null && ticks-- === 0){
           ticks++;
@@ -43,7 +43,7 @@ class Engine{
 
         this.tick();
       }
-    /*}catch(err){
+    }catch(err){
       let msg;
 
       if(err instanceof Error){
@@ -53,7 +53,7 @@ class Engine{
       }
 
       this.stderr.write(msg);
-    }*/
+    }
 
     this.paused = 1;
     return ticks;

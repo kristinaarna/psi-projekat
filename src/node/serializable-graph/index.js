@@ -190,7 +190,7 @@ class SerializableGraph extends O.Serializable{
 
   set size(size){
     if(size > this.maxSize)
-      throw new RangeError('Maximum graph size exceeded');
+      return this.onError();
 
     this.#size = size;
   }
@@ -299,6 +299,10 @@ class SerializableGraph extends O.Serializable{
       return `${`${SG.getName(node, 0)}.${node.id}`.padEnd(20)} ${node[sizeSym]}`;
     }).join('\n'));
     return this;
+  }
+
+  onError(){
+    throw new RangeError('Maximum graph size exceeded');
   }
 }
 

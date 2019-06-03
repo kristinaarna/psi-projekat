@@ -1,30 +1,42 @@
-0, 1,
-==, =, var, [],
+0, 1, ==, =, var, [],
 in, out, eof, #,
 
-var(x, # 0),
-var(y, # 0),
-var(z, # -1),
+var(flag, 0),
 
-var(null, # .null),
+var(ok, [](a)(==(a, # .null)(0, 1))),
+var(if, [](a, b, c)(ok(a)(b, c)())),
 
-var(ok, [](a)(
-  ==(a, null)(0, 1)
-)),
-
-var(if, [](a, b, c)(
-  ok(a)(b, c)()
-)),
-
-var(f, []()(
-  var(a, # .get(x, y, z)),
-  var(b, a .get(# "pushable")),
-
-  if(b, []()(
-    b .send(# "push")
-  ), []()(
-    # .dispatch()
+var(loop, []()(
+  var(tile, # .get(# 0, # 0, # 0)),
+  var(coin, tile .get(# "coin")),
+  if(coin, []()(
+    coin .send(# "collect")
   )),
 
-  f()
+  var(tile, # .get(# 0, # -1, # -1)),
+  if(tile, []()(
+    if(tile .get(# "ground"), []()(
+      if(# .go(), 0, []()(
+        # .rotate(# 1)
+      ))
+    ), []()(
+      var(dir, flag(# 3, # 1)),
+      # .rotate(dir),
+
+      var(tile, # .get(# 0, # -1, # -1)),
+      if(tile, []()(
+        if(tile .get(# "ground"), []()(
+          if(# .go(), []()(
+            =(flag, flag(0, 1))
+          ))
+        ))
+      )),
+
+      # .rotate(dir)
+    )),
+  ), []()(
+    # .rotate(# 1)
+  )),
+
+  loop()
 ))()

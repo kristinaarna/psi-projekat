@@ -49,8 +49,8 @@ class Search extends Page{
 
           case 'comps':
             for(const comp of await backend.getCompetitions(O.lst.token, keywords)){
-              const {id, title, date, desc, applied} = comp;
-              new Competition(results, id, title, date, desc, applied);
+              const {id, title, date, desc, maxUsers, currentUsers, applied} = comp;
+              new Competition(results, id, title, date, desc, maxUsers, currentUsers, applied);
             }
             break;
 

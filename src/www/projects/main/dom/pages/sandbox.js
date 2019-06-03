@@ -3,7 +3,9 @@
 const PL = require('/node/prog-langs/programming-language');
 const ProgLangEngine = require('/node/prog-langs/engine');
 const RenderEngine = require('/node/simulator/render-engine');
+const execute = require('/node/simulator/execute');
 const LS = require('../../strings');
+const backend = require('../../backend');
 const Element = require('../element');
 const TextEditor = require('../text-editor');
 const Form = require('../form');
@@ -11,18 +13,15 @@ const Frame = require('../frame');
 const elemCtors = require('../sandbox');
 const Page = require('./page');
 
-const DEFAULT_TAB = 'script';
+const SCRIPT_IDENTIFIER = 'ai-playground.user-script';
+const SCRIPT_VERSION = 1;
 
 const WIDTH = 926;
 const HEIGHT = 671;
 
-const MAX_SIZE = 1e7;
-const CRITICAL_SIZE = MAX_SIZE - 1e3;
-const INSTRUCTIONS_PER_TICK = 1e4;
+const DEFAULT_TAB = 'simulator';
 
 class Sandbox extends Page{
-  #coords = new Int8Array(3);
-
   constructor(parent){
     super(parent);
 
@@ -30,13 +29,15 @@ class Sandbox extends Page{
     this.awaitingPause = 0;
     this.disposed = 0;
 
+    const {dom} = O.glob;
+
     const labs = LS.labels.sandbox;
     const frame = this.frame = new Frame(this, [
       ['script', labs.script],
       ['input', labs.input],
       ['output', labs.output],
       ['simulator', labs.simulator],
-      ['config', labs.config],
+      ['settings', labs.settings],
     ]);
 
     const editors = this.editors = O.obj();
@@ -56,8 +57,34 @@ class Sandbox extends Page{
     const reng = this.reng = new RenderEngine(canvCont.elem, WIDTH, HEIGHT);
     reng.init()//.catch(log);
 
-    const config = this.config = new elemCtors.Configuration(frame.contents[4]);
+    const settings = this.settings = new elemCtors.Configuration(frame.contents[4]);
     let doNotEval = 0;
+
+    settings.on('exportScript', () => {
+      (async () => {
+        const ser = new O.Serializer();
+
+        ser.writeStr(SCRIPT_IDENTIFIER);
+        ser.writeUint(SCRIPT_VERSION);
+
+        const lang = await settings.getLang();
+        ser.writeStr(lang.name);
+        ser.writeStr(editors.script.val);
+
+        const buf = ser.getOutput(1);
+        const str = buf.toString('base64');
+        const token = await backend.echo(str);
+
+        const a = O.doc.createElement('a');
+        a.href = `/echo?token=${token}`;
+
+        a.download = `${
+          O.lst.signedIn ? `${O.lst.nick}-` : ''
+        }${O.now}.user-script`;
+
+        a.click();
+      })()//.catch(log);
+    });
 
     frame.on('select', tab => {
       if(this.disposed) return;
@@ -79,16 +106,20 @@ class Sandbox extends Page{
           if(this.disposed) return;
           this.running = 1;
 
+          const maxSize = settings.get('maxSize');
+          const criticalSize = settings.get('criticalSize');
+          const instructionsPerTick = settings.get('instructionsPerTick');
+
           output.val = 'Computing...';
           output.elem.classList.remove('output-error');
           output.elem.classList.add('output-computing');
 
           reng.play();
 
-          const lang = await this.config.getLang();
+          const lang = await this.settings.getLang();
           if(this.disposed) return;
 
-          const eng = this.eng = new ProgLangEngine(lang, script.val, MAX_SIZE, CRITICAL_SIZE);
+          const eng = this.eng = new ProgLangEngine(lang, script.val, maxSize, criticalSize);
           let error = null;
           let io;
 
@@ -111,7 +142,7 @@ class Sandbox extends Page{
 
             await O.await(async () => {
               if(this.disposed || this.awaitingPause || error !== null) return 1;
-              eng.run(INSTRUCTIONS_PER_TICK);
+              eng.run(instructionsPerTick);
               return eng.done;
             });
           }else{
@@ -120,7 +151,7 @@ class Sandbox extends Page{
 
             eng.stdin.on('read', (buf, len) => {
               if(len & 7)
-                throw O.glob.dom.alert('Input bit stream is currently not supported in simulator');
+                throw dom.alert('Input bit stream is currently not supported in simulator');
 
               len >>= 3;
 
@@ -134,7 +165,7 @@ class Sandbox extends Page{
 
             eng.stdout.on('write', (buf, len) => {
               if(len & 7)
-                throw O.glob.dom.alert('Output bit stream is currently not supported in simulator');
+                throw dom.alert('Output bit stream is currently not supported in simulator');
 
               len >>= 3;
 
@@ -149,21 +180,32 @@ class Sandbox extends Page{
               eng.pause();
             });
 
+            let botObj = null;
+
             const onTick = bot => {
-              let ticks = INSTRUCTIONS_PER_TICK;
+              if(botObj === null){
+                botObj = bot;
+              }else if(bot !== botObj){
+                bot.remove();
+                dom.err('multipleBotsInSandbox');
+                return;
+              }
+
+              let ticks = instructionsPerTick;
 
               while(ticks > 0){
                 const prev = ticks;
-                ticks = this.execute(bot, inp, out, ticks);
+                ticks = execute(bot, inp, out, ticks);
                 if(ticks === prev) break;
               }
 
               while(ticks > 0 && !eng.done){
                 ticks = eng.run(ticks);
+                if(error !== null) break;
 
                 while(ticks > 0){
                   const prev = ticks;
-                  ticks = this.execute(bot, inp, out, ticks);
+                  ticks = execute(bot, inp, out, ticks);
                   if(ticks === prev) break;
                 }
               }
@@ -243,160 +285,6 @@ class Sandbox extends Page{
   }
 
   static title(){ return LS.titles.sandbox; }
-
-  execute(bot, inp, out, ticks){
-    if(inp.length === 0) return ticks;
-
-    const op = inp[0];
-
-    switch(op){
-      case 0x00: { // Dispatch
-        out.length = 0;
-        out.push(0);
-        inp.splice(0, 1);
-        ticks = 0;
-        break;
-      }
-
-      case 0x01: { // Rotate
-        if(inp.length < 2) break;
-        out.length = 0;
-
-        const dir = inp[1];
-        if(dir === (dir & 3)){
-          bot.dir = bot.dir + dir & 3;
-          out.push(0);
-        }else{
-          out.push(1);
-        }
-
-        ticks = 0;
-        inp.splice(0, 2);
-        break;
-      }
-
-      case 0x02: { // Go forward
-        out.length = 0;
-
-        if(bot.canGo()){
-          bot.go();
-          out.push(0);
-        }else{
-          out.push(1);
-        }
-
-        inp.splice(0, 1);
-        ticks = 0;
-        break;
-      }
-
-      case 0x03: { // Jump
-        out.length = 0;
-
-        if(bot.canJump()){
-          bot.jump();
-          out.push(0);
-        }else{
-          out.push(1);
-        }
-
-        inp.splice(0, 1);
-        ticks = 0;
-        break;
-      }
-
-      case 0x04: { // Can the bot see the given tile
-        if(inp.length < 4) break;
-        out.length = 0;
-
-        const [x, y, z] = this.getCoords(inp);
-
-        out.push(0);
-        out.push(bot.canSee(x, y, z));
-
-        inp.splice(0, 4);
-        break;
-      }
-
-      case 0x05: { // Does the given tile have an object with the given traits
-        if(inp.length < 5) break;
-
-        const tlen = inp[4];
-        if(inp.length < tlen + 5) break;
-
-        out.length = 0;
-
-        const [x, y, z] = this.getCoords(inp);
-        const traits = O.Buffer.from(inp.slice(5, tlen + 5)).toString().split(' ');
-        inp.splice(0, tlen + 5);
-
-        if(!bot.canSee(x, y, z)){
-          out.push(1);
-          break;
-        }
-
-        const d = bot.get(x, y, z);
-        const obj = d.findm(traits);
-
-        out.push(0);
-        out.push(obj !== null);
-        break;
-      }
-
-      case 0x06: { // Send the given request to the first object with the given traits from the given tile
-        if(inp.length < 5) break;
-
-        const tlen = inp[4];
-        if(inp.length < tlen + 5) break;
-
-        const mlen = inp[tlen + 5];
-        if(inp.length < tlen + mlen + 6) break;
-
-        out.length = 0;
-
-        const [x, y, z] = this.getCoords(inp);
-        const traits = O.Buffer.from(inp.slice(5, tlen + 5)).toString().split(' ');
-        const msg = O.Buffer.from(inp.slice(tlen + 6, tlen + mlen + 6)).toString();
-        inp.splice(0, tlen + mlen + 6);
-
-        if(!bot.canSee(x, y, z)){
-          out.push(1);
-          break;
-        }
-
-        const d = bot.get(x, y, z);
-        const obj = d.findm(traits);
-        if(obj === null){
-          out.push(1);
-          break;
-        }
-
-        out.push(0);
-        out.push(obj.send(bot, msg) & 255);
-        ticks = 0;
-        break;
-      }
-
-      default: {
-        out.length = 0;
-        out.push(1);
-        ticks = 0;
-        break;
-      }
-    }
-
-    return ticks;
-  }
-
-  getCoords(inp){
-    const cs = this.#coords;
-
-    cs[0] = inp[1];
-    cs[1] = inp[2];
-    cs[2] = inp[3];
-
-    return cs;
-  }
 
   css(){ return 'sandbox'; }
 }

@@ -91,11 +91,11 @@ class Invocation extends SF{
     return 1;
   }
 
-  get isFunc(){ return 0; }
+  get hasCtx(){ return 0; }
 
-  get prevFunc(){
+  get prevCtx(){
     let sf = this.prev;
-    while(!sf.isFunc) sf = sf.prev;
+    while(!sf.hasCtx) sf = sf.prev;
     return sf;
   }
 
@@ -149,7 +149,7 @@ class GlobalInvocation extends Invocation{
     if(elem !== null) elem.ident = this.getIdent(elem.ident);
   }
 
-  get isFunc(){ return 1; }
+  get hasCtx(){ return 1; }
 
   tick(th){
     const {elem} = this;
@@ -325,7 +325,7 @@ class Assign extends NativeInvocation{
     if(ident === null) return th.ret(this.intp.zero);
 
     const val = eargs.get(1);
-    this.prevFunc.setIdent(ident, val);
+    this.prevCtx.setIdent(ident, val);
 
     th.ret(val);
   }
@@ -344,7 +344,7 @@ class Variable extends NativeInvocation{
     if(ident === null) return th.ret(this.intp.zero);
 
     const val = eargs.get(1);
-    this.prevFunc.createIdent(ident, val);
+    this.prevCtx.createIdent(ident, val);
 
     th.ret(val);
   }
@@ -395,7 +395,7 @@ class UserlandFunction extends NativeInvocation{
     return v1 === v2;
   }
 
-  get isFunc(){ return 1; }
+  get hasCtx(){ return 1; }
 
   invoke(args){
     let {elem} = this;

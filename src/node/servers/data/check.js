@@ -4,13 +4,23 @@ const fs = require('fs');
 const path = require('path');
 const O = require('../../omikron');
 
-const int = a => Number.isInteger(a) && a <= Number.MAX_SAFE_INTEGER;
+const MAX_DATE = 864e13;
+
+const int = (a, min=Number.MIN_SAFE_INTEGER, max=Number.MAX_SAFE_INTEGER) => {
+  return Number.isInteger(a) && a >= min && a <= max;
+};
+
+const uint = a => int(a, 0);
+const date = a => int(a, 0, MAX_DATE);
+
 const str = a => typeof a === 'string';
 const nstr = a => !str(a);
 const sstr = a => str(a) && a.length <= 1024;
 
 const check = {
   int,
+  uint,
+  date,
   str,
   nstr,
   sstr,

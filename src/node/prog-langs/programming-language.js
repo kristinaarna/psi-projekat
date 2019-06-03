@@ -30,7 +30,8 @@ const langsDir = path.join(cwd, 'langs');
 const cache = O.obj();
 
 class ProgrammingLanguage{
-  constructor(syntax, Parser, Compiler, Interpreter){
+  constructor(name, syntax, Parser, Compiler, Interpreter){
+    this.name = name;
     this.syntax = syntax;
 
     const ctors = this.graphCtors = baseGraphCtors.concat([
@@ -71,7 +72,7 @@ class ProgrammingLanguage{
     const Compiler = require(path.join(dir, 'compiler'));
     const Interpreter = require(path.join(dir, 'interpreter'));
 
-    const langInstance = new PL(syntax, Parser, Compiler, Interpreter);
+    const langInstance = new PL(langName, syntax, Parser, Compiler, Interpreter);
     cache[lang] = langInstance;
 
     return langInstance;

@@ -1,5 +1,6 @@
 'use strict';
 
+const O = require('../omikron');
 const Vector = require('./vector');
 const Object = require('./object');
 

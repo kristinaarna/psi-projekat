@@ -2,8 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const O = require('../../omikron');
-const config = require('../../config');
+const O = require('../omikron');
+const config = require('../config');
 
 const DEFAULT_LEN = 64;
 
@@ -14,12 +14,7 @@ class Token{
 
   static generate(len=DEFAULT_LEN){
     const buf = O.randBuf(len);
-    const base64 = buf.toString('base64');
-
-    const str = base64
-      .replace(/\=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
+    const str = O.base64.encode(buf, 1);
 
     return new Token(str);
   }

@@ -8,6 +8,8 @@ const PageContent = require('./page-content');
 const pages = require('./pages');
 const modals = require('./modals');
 
+const MODAL_TRANSITION_DURATION = 500;
+
 /*
   Document Object Model.
   This class is used for all operations with HTML elements.
@@ -99,7 +101,7 @@ class DOM extends Element{
     this.modalCb = cb;
   }
 
-  closeModal(){
+  closeModal(cb=null){
     if(!this.modalOpen) return;
 
     const {main, modal, modalInner: inner} = this;
@@ -112,6 +114,9 @@ class DOM extends Element{
     this.modalCb.call(null);
     this.modalCb = null;
     this.modalOpen = 0;
+
+    if(cb !== null)
+      setTimeout(cb.bind(null, null), MODAL_TRANSITION_DURATION);
   }
 
   onModalKeydown(evt){
@@ -139,10 +144,14 @@ class DOM extends Element{
   }
 
   err(err, cb){
-    const errs = LS.errors.query;
+    const errs = LS.errors;
 
-    if(err instanceof Error) err = err.stack;
-    else if(typeof err === 'string' && O.has(errs, err)) err = errs[err];
+    if(err instanceof Error){
+      err = err.stack;
+    }else if(typeof err === 'string'){
+      if(O.has(errs, err)) err = errs[err];
+      else if(O.has(errs.query, err)) err = errs.query[err];
+    }
 
     this.alert(err, cb);
   }
@@ -185,6 +194,65 @@ class DOM extends Element{
     const url = path !== '' ? `/?path=${path}` : '/';
     history.pushState(null, path, url);
     this.reload();
+  }
+
+  openFile(cb){
+    const fileInput = O.doc.createElement('input');
+    fileInput.type = 'file';
+
+    const ret = cb.bind(null, null);
+    const err = name => this.err(name, ret);
+
+    const onInput = () => {
+      const {files} = fileInput;
+      if(files.length === 0) return ret();
+      if(files.length > 1) return err('multipleFiles');
+
+      const file = files[0];
+      const reader = new FileReader();
+
+      O.ael(reader, 'load', evt => {
+        this.closeModal(() => {
+          const {result} = reader;
+          const str = result.slice(result.indexOf(',') + 1);
+
+          cb(str);
+        });
+      });
+
+      O.ael(reader, 'error', evt => {
+        this.closeModal(() => {
+          err('cannotLoadFile');
+        });
+      });
+
+      this.alert(LS.messages.loadingFile);
+
+      setTimeout(() => {
+        reader.readAsDataURL(file);
+      }, MODAL_TRANSITION_DURATION);
+    };
+
+    const onFocus = () => {
+      O.rel('focus', onFocus);
+
+      const t = O.now;
+
+      const check = () => {
+        const {files} = fileInput;
+
+        if(files.length !== 0) return onInput();
+        if(O.now - t > 1e3) return ret();
+
+        O.raf(check);
+      };
+
+      O.raf(check);
+    };
+
+    O.ael('focus', onFocus);
+
+    fileInput.click();
   }
 
   async loadPage(){
@@ -283,8 +351,8 @@ class DOM extends Element{
     const comps = await backend.getCompetitions(O.lst.token, '');
 
     for(const comp of comps){
-      const {id, title, date, desc, applied} = comp;
-      page.createCompetition(id, title, date, desc, applied);
+      const {id, title, date, desc, maxUsers, currentUsers, applied} = comp;
+      page.createCompetition(id, title, date, desc, maxUsers, currentUsers, applied);
     }
   }
 

@@ -27,16 +27,18 @@
           endDate,
           idGoal,
           maxUsers,
+          currentUsers,
           points
         ) values (
           ?, ?, ?, ?,
-          1, 0, 0, 0
+          0, 0, ?, 0, 0
         )
       ')->execute([
         $row['id'],
         $args->title,
         $args->desc,
-        $this->date,
+        $args->startDate,
+        $args->maxUsers,
       ]);
 
       $this->succ();

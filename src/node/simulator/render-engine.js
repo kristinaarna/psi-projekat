@@ -1,5 +1,8 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+const O = require('../omikron');
 const Camera = require('./camera');
 const Grid = require('./grid');
 const Tile = require('./tile');
@@ -11,8 +14,26 @@ const Matrix = require('./matrix');
 const DiscreteRay = require('./discrete-ray');
 const Ray = require('./ray');
 const Vector = require('./vector');
-const vsSrc = require('./shaders/vs');
-const fsSrc = require('./shaders/fs');
+
+const cwd = __dirname;
+
+/*
+  This code that loads shaders may seem unnecessary complicated, but it is actually
+  needed to be written exactly like this in order to make it work properly both in
+  browser and Node.js
+*/
+let vsSrc1, fsSrc1;
+if(O.isElectron){
+  vsSrc1 = O.rfs(path.join(cwd, './shaders/vs.glsl'), 1);
+  fsSrc1 = O.rfs(path.join(cwd, './shaders/fs.glsl'), 1);
+}else{
+  const vsSrc2 = require('./shaders/vs.glsl');
+  const fsSrc2 = require('./shaders/fs.glsl');
+  vsSrc1 = vsSrc2;
+  fsSrc1 = fsSrc2;
+}
+const vsSrc = vsSrc1;
+const fsSrc = fsSrc1;
 
 const FOV = O.pi / 3;
 const NEAR = 1e-3;
@@ -34,10 +55,11 @@ const rengSem = new O.Semaphore(1);
 const {min, max, abs, sin, cos} = Math;
 
 class RenderEngine extends O.EventEmitter{
-  constructor(div, width, height){
+  constructor(div, width, height, compData=null){
     super();
 
     this.div = div;
+    this.compData = compData;
 
     const w = this.w = width;
     const h = this.h = height;
@@ -64,7 +86,7 @@ class RenderEngine extends O.EventEmitter{
 
     this.aspectRatio = w / h;
 
-    this.cam = new Camera(1.24, -4.5, 1.85, 0.479, 2.447, 0);
+    this.cam = new Camera(-3, 7, -3, O.pi / 6, O.pi34, 0);
 
     this.speed = .1;
     this.dir = 0;
@@ -81,7 +103,7 @@ class RenderEngine extends O.EventEmitter{
     this.renderBound = this.render.bind(this);
 
     // TODO: Implement this in a better way (don't use `O.z`)
-    this.tt = O.now();
+    this.tt = O.now;
     this.sum = 0;
     this.num = 0;
 
@@ -113,13 +135,15 @@ class RenderEngine extends O.EventEmitter{
     await rengSem.wait();
     this.initCanvas();
 
-    await Material.init(() => {
+    await Material.init(this, () => {
       return gl.createTexture();
     }, (tex, img) => {
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
       gl.generateMipmap(gl.TEXTURE_2D);
     });
+
+    await Model.init();
 
     this.initGrid();
     this.aels();
@@ -188,14 +212,29 @@ class RenderEngine extends O.EventEmitter{
         const d = grid.get(x, y, z);
 
         if(!y) return new cs.Dirt(d);
-        if((x || z) && O.rand(40) === 0){
-          if(O.rand(2) == 0) new cs.Rock(d);
+        if((x || z) && O.rand(20) === 0){
+          if(O.rand(5) === 0) new cs.Rock(d);
           else new cs.Coin(d);
         }
       }));
     });
 
-    const bot = new cs.Bot(grid.get(5, 1, 5).purge());
+    if(O.isElectron){
+      for(const user of this.compData.users){
+        while(1){
+          const pos = new Vector(O.rand(n), 1, O.rand(n));
+          const d = grid.getv(pos);
+          if(d.has.bot) continue;
+
+          const bot = new cs.Bot(d.purge(), O.rand(4));
+          break;
+        }
+      }
+    }else{
+      const pos = new Vector(O.rand(n), 1, O.rand(n));
+      const d = grid.getv(pos);
+      const bot = new cs.Bot(d.purge(), O.rand(4));
+    }
   }
 
   aels(){
@@ -331,15 +370,17 @@ class RenderEngine extends O.EventEmitter{
 
     let wasActive = 0;
 
-    this.ael('blur', evt => {
-      if(wasActive = this.active && !this.awaitingPause)
-        this.pause();
-    });
+    if(!O.isElectron){
+      this.ael('blur', evt => {
+        if(wasActive = this.active && !this.awaitingPause)
+          this.pause();
+      });
 
-    this.ael('focus', evt => {
-      if(wasActive)
-        this.play();
-    });
+      this.ael('focus', evt => {
+        if(wasActive)
+          this.play();
+      });
+    }
   }
 
   ael(...args){
@@ -365,7 +406,7 @@ class RenderEngine extends O.EventEmitter{
     O.await(() => this.disposed || this.initialized && !this.active).then(() => {
       if(this.disposed) return;
       this.active = 1;
-      this.timePrev = O.now() - this.timeDiff;
+      this.timePrev = O.now - this.timeDiff;
       this.renderBound();
     })//.catch(log);
   }
@@ -553,7 +594,7 @@ class RenderEngine extends O.EventEmitter{
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const time = O.now();
+    const time = O.now;
     let timeDiff = this.timeDiff = time - this.timePrev;
 
     const newTick = timeDiff >= TICK_TIME;
@@ -570,7 +611,7 @@ class RenderEngine extends O.EventEmitter{
 
     // TODO: Use the exponential moving average algorithm to calculate FPS
     {
-      const t = O.now();
+      const t = O.now;
       this.sum += t - this.tt;
       this.num++;
       this.tt = t;
