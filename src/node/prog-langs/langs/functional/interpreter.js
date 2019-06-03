@@ -91,6 +91,14 @@ class Invocation extends SF{
     return 1;
   }
 
+  get isFunc(){ return 0; }
+
+  get prevFunc(){
+    let sf = this.prev;
+    while(!sf.isFunc) sf = sf.prev;
+    return sf;
+  }
+
   invoke(args){ O.virtual('invoke'); }
 
   getIdentByIndex(index){
@@ -140,6 +148,8 @@ class GlobalInvocation extends Invocation{
     const elem = this.elem = List.from(list);
     if(elem !== null) elem.ident = this.getIdent(elem.ident);
   }
+
+  get isFunc(){ return 1; }
 
   tick(th){
     const {elem} = this;
@@ -315,7 +325,7 @@ class Assign extends NativeInvocation{
     if(ident === null) return th.ret(this.intp.zero);
 
     const val = eargs.get(1);
-    this.prev.setIdent(ident, val);
+    this.prevFunc.setIdent(ident, val);
 
     th.ret(val);
   }
@@ -334,7 +344,7 @@ class Variable extends NativeInvocation{
     if(ident === null) return th.ret(this.intp.zero);
 
     const val = eargs.get(1);
-    this.prev.createIdent(ident, val);
+    this.prevFunc.createIdent(ident, val);
 
     th.ret(val);
   }
@@ -384,6 +394,8 @@ class UserlandFunction extends NativeInvocation{
   static cmp(v1, v2){
     return v1 === v2;
   }
+
+  get isFunc(){ return 1; }
 
   invoke(args){
     let {elem} = this;
