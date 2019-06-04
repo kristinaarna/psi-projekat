@@ -45,7 +45,7 @@ async function render(compData){
   reng.hudVisible = 0;
 
   // TODO: fix this
-  // await O.waita(3e3);
+  await O.waita(3e3);
 
   const engs = await createEngs(reng, compData);
 

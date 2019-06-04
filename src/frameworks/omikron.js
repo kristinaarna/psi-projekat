@@ -3609,7 +3609,7 @@ const O = {
       log(...args);
 
     if(O.isNode) O.proc.exit();
-    else window.close();
+    else setTimeout(() => window.close(), 500);
   },
 
   // Function which does nothing

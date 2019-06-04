@@ -91,17 +91,13 @@ function initElectron(){
 
     if(err === null){
       err = O.ftext(`
-
-        === ERROR ===
-
+        \n=== ERROR ===\n
         An unexpected error has occured somewhere, but we
         are unable to detect where exactly.
       `);
     }
 
-    log(err);
-
-    setTimeout(() => window.close(), 500);
+    O.exit(err);
   });
 }
 

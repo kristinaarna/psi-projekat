@@ -3,33 +3,32 @@
 const fs = require('fs');
 const path = require('path');
 const O = require('../omikron');
+const php = require('../php');
 const comp = require('.');
 
-const cwd = __dirname;
-const scriptFile = path.join(cwd, '../../www/projects/main/strings/locales/sr-cyrl-rs/script-template.txt');
-
-setTimeout(() => main().catch(log));
+setTimeout(() => main().catch(O.exit));
 
 async function main(){
-  const mainScript = O.rfs(scriptFile, 1);
-
-  const compData = {
-    users: [
-      {
-        nick: 'root',
-        points: 0,
-        lang: 'Functional()',
-        script: mainScript,
-      }, {
-        nick: 'abc',
-        points: 0,
-        lang: 'Functional()',
-        script: mainScript,
-      }
-    ],
-  };
+  const compData = await php.exec('processNextCompetition');
+  const pointsPrev = getPoints(compData);
 
   await comp.render(compData);
 
+  const points = getPoints(compData);
+  await php.exec('updatePoints', O.keys(points).map(nick => [nick, points[nick]]));
+
+  log('\nResults:\n');
+  for(const nick in points)
+    log(`${nick}: ${points[nick] - pointsPrev[nick]}`);
+
   O.exit();
+}
+
+function getPoints(compData){
+  const points = O.obj();
+
+  for(const user of compData.users)
+    points[user.nick] = user.points;
+
+  return points;
 }

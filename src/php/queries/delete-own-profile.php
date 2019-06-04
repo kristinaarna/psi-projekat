@@ -1,5 +1,5 @@
 <?php
-  class DeleteOtherProfile extends Query{
+  class DeleteOwnProfile extends Query{
     public function query($pdo, $args){
       $st = $pdo->prepare('
         select idUser
@@ -21,5 +21,5 @@
     }
   }
 
-  new DeleteOtherProfile();
+  new DeleteOwnProfile();
 ?>
